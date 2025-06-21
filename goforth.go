@@ -60,7 +60,7 @@ func (it *Interpreter) Run(input string) {
 			if value, err := strconv.ParseInt(word, 10, 64); err == nil {
 				it.dataStack.Push(value)
 			} else {
-				fmt.Printf("Unknown word: %s\n", word)
+				panic(fmt.Sprintf("Unknown word: %s\n", word))
 			}
 		}
 	}

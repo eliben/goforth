@@ -48,12 +48,9 @@ func (it *Interpreter) dotQuote(string) {
 
 	s := it.input[:endIdx]
 	it.input = it.input[endIdx+1:] // Advance the input pointer
-	if it.compileMode {
-		// In compile mode, we just skip the string.
-		return
+	if !it.compileMode {
+		it.stdout.WriteString(s)
 	}
-	// Not in compile mode, so print the string.
-	it.stdout.WriteString(s)
 }
 
 // binop implements binary operators like +, -, etc. that take two values from
@@ -86,6 +83,7 @@ func (it *Interpreter) dup(string) {
 	it.dataStack.Push(value)
 }
 
+// TODO: reimplement the "10 emit" with CR once defined...
 // emit implements the EMIT word.
 // Print the TOS value as a character to stdout.
 func (it *Interpreter) emit(string) {
