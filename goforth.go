@@ -16,16 +16,25 @@ type Interpreter struct {
 	memory [64 * 1024]byte
 	memptr int
 
+	// compileMode indicates whether the interpreter is in compile mode.
+	compileMode bool
+
 	input  string
 	stdout strings.Builder
 
 	builtinsMap map[string]func(string)
+
+	// dict is the Forth dictionary of user-defined words. Each word is
+	// mapped to a string that represents the word's definition. These
+	// strings are interpreted when the word is called.
+	dict map[string]string
 }
 
 func NewInterpreter() *Interpreter {
 	it := &Interpreter{
 		dataStack:   Stack[int64]{},
 		returnStack: Stack[int64]{},
+		compileMode: false,
 	}
 	it.setupBuiltins()
 	return it
@@ -60,10 +69,7 @@ func (it *Interpreter) Run(input string) {
 // nextWord retrieves the next word from the input string, skipping any leading
 // whitespace. It returns "" if no more words are available.
 func (it *Interpreter) nextWord() string {
-	// Skip whitespace
-	for len(it.input) > 0 && isWhitespace(it.input[0]) {
-		it.input = it.input[1:]
-	}
+	it.skipWhitespace()
 
 	if len(it.input) == 0 {
 		return ""
@@ -76,8 +82,16 @@ func (it *Interpreter) nextWord() string {
 
 	word := it.input[:end]
 	it.input = it.input[end:]
+	it.skipWhitespace()
 
 	return word
+}
+
+// skipWhitespace skips leading whitespace characters in the input string.
+func (it *Interpreter) skipWhitespace() {
+	for len(it.input) > 0 && isWhitespace(it.input[0]) {
+		it.input = it.input[1:]
+	}
 }
 
 func isWhitespace(c byte) bool {

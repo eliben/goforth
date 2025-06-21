@@ -44,8 +44,6 @@ func TestForthFiles(t *testing.T) {
 func compareExpected(t *testing.T, expected, actual string) {
 	if expected != actual {
 		t.Errorf("Output mismatch.\nExpected:\n%s\nActual:\n%s", expected, actual)
-		// fmt.Println([]byte(expected))
-		// fmt.Println([]byte(actual))
 
 		expectedLines := strings.Split(expected, "\n")
 		actualLines := strings.Split(actual, "\n")
