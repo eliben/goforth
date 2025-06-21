@@ -8,6 +8,7 @@ import (
 func (it *Interpreter) setupBuiltins() {
 	// Initialize the built-in words map.
 	it.builtinsMap = map[string]func(string){
+		`\`:    it.backslash,
 		":":    it.colon,
 		".":    it.dot,
 		`."`:   it.dotQuote,
@@ -18,6 +19,19 @@ func (it *Interpreter) setupBuiltins() {
 		"EMIT": it.emit,
 		"OVER": it.over,
 		"SWAP": it.swap,
+	}
+}
+
+// backslash implements the \ word.
+// It ignores everything until the end of the line.
+func (it *Interpreter) backslash(string) {
+	if endIdx := strings.Index(it.input, "\n"); endIdx != -1 {
+		// Truncate the input until the end of the line, skipping the
+		// newline character.
+		it.input = it.input[endIdx+1:]
+	} else {
+		// No newline found: input is done.
+		it.input = ""
 	}
 }
 
