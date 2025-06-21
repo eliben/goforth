@@ -6,7 +6,6 @@ import (
 )
 
 func (it *Interpreter) setupBuiltins() {
-	// Initialize the built-in words map.
 	it.builtinsMap = map[string]func(string){
 		`\`:    it.backslash,
 		"(":    it.paren,
@@ -21,18 +20,22 @@ func (it *Interpreter) setupBuiltins() {
 		"OVER": it.over,
 		"SWAP": it.swap,
 	}
+
+	it.builtinImmediate = map[string]bool{
+		`."`: true,
+	}
 }
 
 // backslash implements the \ word.
 // It ignores everything until the end of the line.
 func (it *Interpreter) backslash(string) {
-	if endIdx := strings.Index(it.input, "\n"); endIdx != -1 {
+	if idx := strings.Index(it.input[it.inputPtr:], "\n"); idx != -1 {
 		// Truncate the input until the end of the line, skipping the
 		// newline character.
-		it.input = it.input[endIdx+1:]
+		it.inputPtr += idx + 1
 	} else {
 		// No newline found: input is done.
-		it.input = ""
+		it.inputPtr = len(it.input)
 	}
 }
 
@@ -41,13 +44,13 @@ func (it *Interpreter) backslash(string) {
 // Does not handle nesting -- the first closing paren ends the commend (this
 // is consistent with gforth).
 func (it *Interpreter) paren(string) {
-	if endIdx := strings.Index(it.input, ")"); endIdx != -1 {
+	if idx := strings.Index(it.input[it.inputPtr:], ")"); idx != -1 {
 		// Truncate the input until the closing parenthesis, skipping the
 		// parenthesis itself.
-		it.input = it.input[endIdx+1:]
+		it.inputPtr += idx + 1
 	} else {
 		// No closing parenthesis found: input is done.
-		it.input = ""
+		it.inputPtr = len(it.input)
 	}
 }
 
@@ -71,9 +74,9 @@ func (it *Interpreter) dot(string) {
 // prints out the string to stdout.
 func (it *Interpreter) dotQuote(string) {
 	// Find the end of the string, which is delimited by a double quote.
-	if endIdx := strings.Index(it.input, `"`); endIdx != -1 {
-		s := it.input[:endIdx]
-		it.input = it.input[endIdx+1:] // Advance the input pointer
+	if idx := strings.Index(it.input[it.inputPtr:], `"`); idx != -1 {
+		s := it.input[it.inputPtr : it.inputPtr+idx]
+		it.inputPtr += idx + 1
 		if !it.compileMode {
 			it.stdout.WriteString(s)
 		}

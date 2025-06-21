@@ -19,10 +19,16 @@ type Interpreter struct {
 	// compileMode indicates whether the interpreter is in compile mode.
 	compileMode bool
 
-	input  string
+	input    string
+	inputPtr int
+
 	stdout strings.Builder
 
 	builtinsMap map[string]func(string)
+
+	// builtinImmediate marks which built-in words are IMMEDIATE. These
+	// words are executed when encountered during compilation.
+	builtinImmediate map[string]bool
 
 	// dict is the Forth dictionary of user-defined words. Each word is
 	// mapped to a string that represents the word's definition. These
@@ -42,6 +48,7 @@ func NewInterpreter() *Interpreter {
 
 func (it *Interpreter) Run(input string) {
 	it.input = input
+	it.inputPtr = 0
 
 	for {
 		word := it.nextWord()
@@ -70,28 +77,29 @@ func (it *Interpreter) Run(input string) {
 // whitespace. It returns "" if no more words are available.
 func (it *Interpreter) nextWord() string {
 	it.skipWhitespace()
-
-	if len(it.input) == 0 {
+	if it.endOfInput() {
 		return ""
 	}
 
-	end := 0
-	for end < len(it.input) && !isWhitespace(it.input[end]) {
-		end++
+	start := it.inputPtr
+	for !it.endOfInput() && !isWhitespace(it.input[it.inputPtr]) {
+		it.inputPtr++
 	}
 
-	word := it.input[:end]
-	it.input = it.input[end:]
+	word := it.input[start:it.inputPtr]
 	it.skipWhitespace()
-
 	return word
 }
 
 // skipWhitespace skips leading whitespace characters in the input string.
 func (it *Interpreter) skipWhitespace() {
-	for len(it.input) > 0 && isWhitespace(it.input[0]) {
-		it.input = it.input[1:]
+	for !it.endOfInput() && isWhitespace(it.input[it.inputPtr]) {
+		it.inputPtr++
 	}
+}
+
+func (it *Interpreter) endOfInput() bool {
+	return it.inputPtr >= len(it.input)
 }
 
 func isWhitespace(c byte) bool {
