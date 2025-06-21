@@ -9,6 +9,7 @@ func (it *Interpreter) setupBuiltins() {
 	// Initialize the built-in words map.
 	it.builtinsMap = map[string]func(string){
 		`\`:    it.backslash,
+		"(":    it.paren,
 		":":    it.colon,
 		".":    it.dot,
 		`."`:   it.dotQuote,
@@ -35,6 +36,21 @@ func (it *Interpreter) backslash(string) {
 	}
 }
 
+// paren implements the ( word.
+// It ignores everything until a closing parenthesis is encountered.
+// Does not handle nesting -- the first closing paren ends the commend (this
+// is consistent with gforth).
+func (it *Interpreter) paren(string) {
+	if endIdx := strings.Index(it.input, ")"); endIdx != -1 {
+		// Truncate the input until the closing parenthesis, skipping the
+		// parenthesis itself.
+		it.input = it.input[endIdx+1:]
+	} else {
+		// No closing parenthesis found: input is done.
+		it.input = ""
+	}
+}
+
 // colon implements the : word.
 // It parses a definition until a semicolon is encountered, and stores the
 // definition in the dictionary.
@@ -55,15 +71,14 @@ func (it *Interpreter) dot(string) {
 // prints out the string to stdout.
 func (it *Interpreter) dotQuote(string) {
 	// Find the end of the string, which is delimited by a double quote.
-	endIdx := strings.Index(it.input, `"`)
-	if endIdx == -1 {
+	if endIdx := strings.Index(it.input, `"`); endIdx != -1 {
+		s := it.input[:endIdx]
+		it.input = it.input[endIdx+1:] // Advance the input pointer
+		if !it.compileMode {
+			it.stdout.WriteString(s)
+		}
+	} else {
 		panic("Unterminated string in .\"")
-	}
-
-	s := it.input[:endIdx]
-	it.input = it.input[endIdx+1:] // Advance the input pointer
-	if !it.compileMode {
-		it.stdout.WriteString(s)
 	}
 }
 
