@@ -10,6 +10,7 @@ func (it *Interpreter) setupBuiltins() {
 		"-":    it.binop,
 		"DROP": it.drop,
 		"DUP":  it.dup,
+		"EMIT": it.emit,
 		"OVER": it.over,
 		"SWAP": it.swap,
 	}
@@ -50,6 +51,16 @@ func (it *Interpreter) dup(string) {
 	value := it.dataStack.MustPop()
 	it.dataStack.Push(value)
 	it.dataStack.Push(value)
+}
+
+// emit implements the EMIT word.
+// Print the TOS value as a character to stdout.
+func (it *Interpreter) emit(string) {
+	value := it.dataStack.MustPop()
+	if value < 0 || value > 255 {
+		panic(fmt.Sprintf("Value out of range for EMIT: %d", value))
+	}
+	it.stdout.WriteByte(byte(value))
 }
 
 // swap implements the SWAP word.
