@@ -23,6 +23,8 @@ func (it *Interpreter) setupBuiltins() {
 
 	it.builtinImmediate = map[string]bool{
 		`."`: true,
+		`(`:  true,
+		`\`:  true,
 	}
 }
 
@@ -54,11 +56,40 @@ func (it *Interpreter) paren(string) {
 	}
 }
 
-// colon implements the : word.
-// It parses a definition until a semicolon is encountered, and stores the
-// definition in the dictionary.
+// colon implements the : word, entering compilation mode.
+// It collects the word's definition as a string until the closing ';', and
+// stores it in the dictionary. It needs to handle IMMEDIATE words, giving
+// them control of parsing (e.g. for commends or .")
 func (it *Interpreter) colon(string) {
-	// TODO
+	it.compileMode = true
+
+	// The next word is the name of the definition. We save it in the
+	// dictionary, mapping to the offset in the input where its code starts.
+	defName := it.nextWord()
+	it.dict[strings.ToUpper(defName)] = it.inputPtr
+
+	// Now we need to skip the definition until we find a ';'.
+	for {
+		// TODO: what about ": ;" ???
+		word := it.nextWord()
+		if word == "" {
+			panic("Unterminated definition in :")
+		}
+		if word == ";" {
+			// End of the definition.
+			break
+		}
+
+		// If the word is IMMEDIATE, execute it. It may manipulate the
+		// input pointer. Otherwise, just keep going.
+		if fn, ok := it.builtinsMap[strings.ToUpper(word)]; ok {
+			if it.builtinImmediate[word] {
+				fn(word)
+			}
+		}
+	}
+
+	it.compileMode = false
 }
 
 // dot implements the . word.

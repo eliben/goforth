@@ -31,9 +31,8 @@ type Interpreter struct {
 	builtinImmediate map[string]bool
 
 	// dict is the Forth dictionary of user-defined words. Each word is
-	// mapped to a string that represents the word's definition. These
-	// strings are interpreted when the word is called.
-	dict map[string]string
+	// mapped to an offset in input where the word's definition is.
+	dict map[string]int
 }
 
 func NewInterpreter() *Interpreter {
@@ -41,6 +40,7 @@ func NewInterpreter() *Interpreter {
 		dataStack:   Stack[int64]{},
 		returnStack: Stack[int64]{},
 		compileMode: false,
+		dict:        make(map[string]int),
 	}
 	it.setupBuiltins()
 	return it
