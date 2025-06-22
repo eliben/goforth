@@ -74,6 +74,9 @@ func (it *Interpreter) colon(string) {
 		// TODO: what about ": ;" ???
 		word := it.nextWord()
 		if word == "" {
+			// TODO: we need better error reporting with line/column number.
+			// all panics should go through a common error handler that finds
+			// this.
 			panic("Unterminated definition in :")
 		}
 		if word == ";" {
