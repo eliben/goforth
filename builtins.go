@@ -10,6 +10,7 @@ func (it *Interpreter) setupBuiltins() {
 		`\`:    it.backslash,
 		"(":    it.paren,
 		":":    it.colon,
+		";":    it.semicolon,
 		".":    it.dot,
 		`."`:   it.dotQuote,
 		"+":    it.binop,
@@ -64,7 +65,7 @@ func (it *Interpreter) colon(string) {
 	it.compileMode = true
 
 	// The next word is the name of the definition. We save it in the
-	// dictionary, mapping to the offset in the input where its code starts.
+	// dictionary, mapping to the pointer in the input where its code starts.
 	defName := it.nextWord()
 	it.dict[strings.ToUpper(defName)] = it.inputPtr
 
@@ -90,6 +91,13 @@ func (it *Interpreter) colon(string) {
 	}
 
 	it.compileMode = false
+}
+
+// semicolon implements the ; word. When it's executed by the interpreter,
+// it pops the current input pointer from the return stack, which
+// effectively returns to the point where the definition was called.
+func (it *Interpreter) semicolon(string) {
+	it.inputPtr = it.ptrStack.MustPop()
 }
 
 // dot implements the . word.

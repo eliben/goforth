@@ -22,6 +22,12 @@ type Interpreter struct {
 	input    string
 	inputPtr int
 
+	// ptrStack is a stack of pointers to the input string. This is used
+	// to keep track of where we are in the input when executing words.
+	// It serves a similar purpose to the call stack in a typical program,
+	// with the input pointer being the "instruction pointer".
+	ptrStack Stack[int]
+
 	stdout strings.Builder
 
 	builtinsMap map[string]func(string)
@@ -31,7 +37,7 @@ type Interpreter struct {
 	builtinImmediate map[string]bool
 
 	// dict is the Forth dictionary of user-defined words. Each word is
-	// mapped to an offset in input where the word's definition is.
+	// mapped to an pointer in input where the word's definition is.
 	dict map[string]int
 }
 
@@ -39,6 +45,7 @@ func NewInterpreter() *Interpreter {
 	it := &Interpreter{
 		dataStack:   Stack[int64]{},
 		returnStack: Stack[int64]{},
+		ptrStack:    Stack[int]{},
 		compileMode: false,
 		dict:        make(map[string]int),
 	}
@@ -49,7 +56,12 @@ func NewInterpreter() *Interpreter {
 func (it *Interpreter) Run(input string) {
 	it.input = input
 	it.inputPtr = 0
+	it.doRun()
+}
 
+// doRun interprets the input string as a Forth program, starting at
+// the current input pointer.
+func (it *Interpreter) doRun() {
 	for {
 		word := it.nextWord()
 		if word == "" {
@@ -62,6 +74,13 @@ func (it *Interpreter) Run(input string) {
 		wordUpper := strings.ToUpper(word)
 		if fn, ok := it.builtinsMap[wordUpper]; ok {
 			fn(wordUpper)
+		} else if ptr, ok := it.dict[wordUpper]; ok {
+			// If the word is in the dictionary, execute it. Save the current
+			// pointer on the stack and set it to the location of the word's
+			// definition. In the next loop iteration, the interpreter will
+			// continue executing from that point.
+			it.ptrStack.Push(it.inputPtr)
+			it.inputPtr = ptr
 		} else {
 			// Try to parse the word as an integer.
 			if value, err := strconv.ParseInt(word, 10, 64); err == nil {
