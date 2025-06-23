@@ -96,8 +96,21 @@ func (it *Interpreter) doRun() {
 
 // fatalErrorf reports a fatal error and stops the interpreter, providing
 // a message with the current line/column.
+// Note: this error reporting can be improved in many ways - more accurate
+// location, "stack trace" etc.
 func (it *Interpreter) fatalErrorf(format string, args ...any) {
-	msg := fmt.Sprintf("program error: "+format+"\n", args...)
+	// Find the line/column number of the current input pointer.
+	line, col := 1, 1
+	for i := 0; i < it.inputPtr; i++ {
+		if it.input[i] == '\n' {
+			line++
+			col = 1
+		} else {
+			col++
+		}
+	}
+	prefix := fmt.Sprintf("program error at (line %d, col %d): ", line, col)
+	msg := fmt.Sprintf(prefix+format+"\n", args...)
 	panic(msg)
 }
 
