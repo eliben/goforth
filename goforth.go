@@ -69,8 +69,10 @@ func (it *Interpreter) doRun() {
 			break
 		}
 
-		// TODO: if word in dict, run it. If not, treat it as a number.
-		// Implement built-in words as interpreter methods? E.g. :, ." etc...
+		// If this is a defined word, execute it. Otherwise, try to parse it
+		// as a number.
+		// Since this is an interpreter, we handle builtins and user-defined
+		// words slightly differently.
 		wordUpper := strings.ToUpper(word)
 		if fn, ok := it.builtinsMap[wordUpper]; ok {
 			fn(wordUpper)
