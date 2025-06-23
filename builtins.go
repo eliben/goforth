@@ -77,7 +77,7 @@ func (it *Interpreter) colon(string) {
 			// TODO: we need better error reporting with line/column number.
 			// all panics should go through a common error handler that finds
 			// this.
-			panic("Unterminated definition in :")
+			it.fatalErrorf("unterminated definition in ':'")
 		}
 		if word == ";" {
 			// End of the definition.
@@ -123,7 +123,7 @@ func (it *Interpreter) dotQuote(string) {
 			it.stdout.WriteString(s)
 		}
 	} else {
-		panic("Unterminated string in .\"")
+		it.fatalErrorf("unterminated string in '.\"'")
 	}
 }
 
@@ -139,7 +139,7 @@ func (it *Interpreter) binop(op string) {
 	case "-":
 		result = v1 - v2
 	default:
-		panic(fmt.Sprintf("Unknown binary operator: %s", op))
+		it.fatalErrorf("unknown binary operator '%s'", op)
 	}
 	it.dataStack.Push(result)
 }
@@ -163,7 +163,7 @@ func (it *Interpreter) dup(string) {
 func (it *Interpreter) emit(string) {
 	value := it.dataStack.MustPop()
 	if value < 0 || value > 255 {
-		panic(fmt.Sprintf("Value out of range for EMIT: %d", value))
+		it.fatalErrorf("value '%d' out of range for EMIT", value)
 	}
 	it.stdout.WriteByte(byte(value))
 }

@@ -88,10 +88,17 @@ func (it *Interpreter) doRun() {
 			if value, err := strconv.ParseInt(word, 10, 64); err == nil {
 				it.dataStack.Push(value)
 			} else {
-				panic(fmt.Sprintf("Unknown word: %s\n", word))
+				it.fatalErrorf("unknown word '%s'", word)
 			}
 		}
 	}
+}
+
+// fatalErrorf reports a fatal error and stops the interpreter, providing
+// a message with the current line/column.
+func (it *Interpreter) fatalErrorf(format string, args ...any) {
+	msg := fmt.Sprintf("program error: "+format+"\n", args...)
+	panic(msg)
 }
 
 // nextWord retrieves the next word from the input string, skipping any leading
