@@ -63,15 +63,23 @@ func (it *Interpreter) paren(string) {
 // them control of parsing (e.g. for commends or .")
 func (it *Interpreter) colon(string) {
 	it.compileMode = true
+	defer func() {
+		it.compileMode = false
+	}()
 
 	// The next word is the name of the definition. We save it in the
 	// dictionary, mapping to the pointer in the input where its code starts.
 	defName := it.nextWord()
+
+	if defName == ";" {
+		// Special case for handling an empty definition ": ;".
+		// This is a no-op.
+		return
+	}
 	it.dict[strings.ToUpper(defName)] = it.inputPtr
 
 	// Now we need to skip the definition until we find a ';'.
 	for {
-		// TODO: what about ": ;" ???
 		word := it.nextWord()
 		if word == "" {
 			it.fatalErrorf("unterminated definition in ':'")
@@ -89,8 +97,6 @@ func (it *Interpreter) colon(string) {
 			}
 		}
 	}
-
-	it.compileMode = false
 }
 
 // semicolon implements the ; word. When it's executed by the interpreter,

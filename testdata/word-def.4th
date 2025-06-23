@@ -23,6 +23,10 @@ pushpie . . . 10 emit
 
 8 four-dup . . . . . 10 emit
 
+: ; \ test that an empty definition works
+
+." fin"
+
 \ ---- OUT ----
 2 
 5 2 
@@ -30,3 +34,4 @@ pushpie . . . 10 emit
 7 7 7 
 4 1 3 
 8 8 8 8 8 
+fin

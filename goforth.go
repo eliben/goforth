@@ -74,15 +74,15 @@ func (it *Interpreter) doRun() {
 		// Since this is an interpreter, we handle builtins and user-defined
 		// words slightly differently.
 		wordUpper := strings.ToUpper(word)
-		if fn, ok := it.builtinsMap[wordUpper]; ok {
-			fn(wordUpper)
-		} else if ptr, ok := it.dict[wordUpper]; ok {
+		if ptr, ok := it.dict[wordUpper]; ok {
 			// If the word is in the dictionary, execute it. Save the current
 			// pointer on the stack and set it to the location of the word's
 			// definition. In the next loop iteration, the interpreter will
 			// continue executing from that point.
 			it.ptrStack.Push(it.inputPtr)
 			it.inputPtr = ptr
+		} else if fn, ok := it.builtinsMap[wordUpper]; ok {
+			fn(wordUpper)
 		} else {
 			// Try to parse the word as an integer.
 			if value, err := strconv.ParseInt(word, 10, 64); err == nil {
