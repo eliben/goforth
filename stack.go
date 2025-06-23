@@ -23,12 +23,3 @@ func (s *Stack[T]) Pop() (T, bool) {
 	s.values = s.values[:index]
 	return el, true
 }
-
-// MustPop pops a value from the stack and panics if the stack is empty.
-func (s *Stack[T]) MustPop() T {
-	value, ok := s.Pop()
-	if !ok {
-		panic("stack underflow")
-	}
-	return value
-}

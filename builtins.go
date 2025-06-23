@@ -103,13 +103,17 @@ func (it *Interpreter) colon(string) {
 // it pops the current input pointer from the return stack, which
 // effectively returns to the point where the definition was called.
 func (it *Interpreter) semicolon(string) {
-	it.inputPtr = it.ptrStack.MustPop()
+	var ok bool
+	it.inputPtr, ok = it.ptrStack.Pop()
+	if !ok {
+		it.fatalErrorf("semicolon called with empty return stack")
+	}
 }
 
 // dot implements the . word.
 // Print the TOS value to stdout, followed by a space.
 func (it *Interpreter) dot(string) {
-	value := it.dataStack.MustPop()
+	value := it.popDataStack()
 	it.stdout.WriteString(fmt.Sprintf("%d ", value))
 }
 
@@ -133,8 +137,8 @@ func (it *Interpreter) dotQuote(string) {
 // binop implements binary operators like +, -, etc. that take two values from
 // the stack, perform the operation, and push the result back onto the stack.
 func (it *Interpreter) binop(op string) {
-	v2 := it.dataStack.MustPop()
-	v1 := it.dataStack.MustPop()
+	v2 := it.popDataStack()
+	v1 := it.popDataStack()
 	var result int64
 	switch op {
 	case "+":
@@ -149,13 +153,13 @@ func (it *Interpreter) binop(op string) {
 
 // drop implements the DROP word.
 func (it *Interpreter) drop(string) {
-	it.dataStack.MustPop()
+	it.popDataStack()
 }
 
 // dup implements the DUP word.
 // Duplicate the TOS value and push it onto the stack.
 func (it *Interpreter) dup(string) {
-	value := it.dataStack.MustPop()
+	value := it.popDataStack()
 	it.dataStack.Push(value)
 	it.dataStack.Push(value)
 }
@@ -164,7 +168,7 @@ func (it *Interpreter) dup(string) {
 // emit implements the EMIT word.
 // Print the TOS value as a character to stdout.
 func (it *Interpreter) emit(string) {
-	value := it.dataStack.MustPop()
+	value := it.popDataStack()
 	if value < 0 || value > 255 {
 		it.fatalErrorf("value '%d' out of range for EMIT", value)
 	}
@@ -173,16 +177,16 @@ func (it *Interpreter) emit(string) {
 
 // swap implements the SWAP word.
 func (it *Interpreter) swap(string) {
-	v1 := it.dataStack.MustPop()
-	v2 := it.dataStack.MustPop()
+	v1 := it.popDataStack()
+	v2 := it.popDataStack()
 	it.dataStack.Push(v1)
 	it.dataStack.Push(v2)
 }
 
 // over implements the OVER word.
 func (it *Interpreter) over(string) {
-	v1 := it.dataStack.MustPop()
-	v2 := it.dataStack.MustPop()
+	v1 := it.popDataStack()
+	v2 := it.popDataStack()
 	it.dataStack.Push(v2)
 	it.dataStack.Push(v1)
 	it.dataStack.Push(v2)

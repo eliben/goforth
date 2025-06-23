@@ -114,6 +114,16 @@ func (it *Interpreter) fatalErrorf(format string, args ...any) {
 	panic(msg)
 }
 
+// popDataStack pops a value from the data stack and returns it.
+// If the stack is empty, it reports a stack underflow error.
+func (it *Interpreter) popDataStack() int64 {
+	value, ok := it.dataStack.Pop()
+	if !ok {
+		it.fatalErrorf("data stack underflow")
+	}
+	return value
+}
+
 // nextWord retrieves the next word from the input string, skipping any leading
 // whitespace. It returns "" if no more words are available.
 func (it *Interpreter) nextWord() string {
