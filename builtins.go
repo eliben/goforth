@@ -7,6 +7,7 @@ import (
 
 func (it *Interpreter) setupBuiltins() {
 	it.builtinsMap = map[string]func(string){
+		`.S`:   it.dotS,
 		`\`:    it.backslash,
 		"(":    it.paren,
 		":":    it.colon,
@@ -26,6 +27,15 @@ func (it *Interpreter) setupBuiltins() {
 		`."`: true,
 		`(`:  true,
 		`\`:  true,
+	}
+}
+
+// dotS implements the .S word.
+func (it *Interpreter) dotS(string) {
+	it.stdout.WriteString(fmt.Sprintf("<%v> ", it.dataStack.Len()))
+	for i := range it.dataStack.Len() {
+		value := it.dataStack.Get(i)
+		it.stdout.WriteString(fmt.Sprintf("%d ", value))
 	}
 }
 

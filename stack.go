@@ -23,3 +23,14 @@ func (s *Stack[T]) Pop() (T, bool) {
 	s.values = s.values[:index]
 	return el, true
 }
+
+func (s *Stack[T]) Len() int {
+	return len(s.values)
+}
+
+// Get returns the element at the specified index. It panics
+// if the index is out of bounds. It's recommende to use this
+// method after checking the length with Len.
+func (s *Stack[T]) Get(index int) T {
+	return s.values[index]
+}
