@@ -7,20 +7,21 @@ import (
 
 func (it *Interpreter) setupBuiltins() {
 	it.builtinsMap = map[string]func(string){
-		`.S`:   it.dotS,
-		`\`:    it.backslash,
-		`(`:    it.paren,
-		`:`:    it.colon,
-		`;`:    it.semicolon,
-		`.`:    it.dot,
-		`."`:   it.dotQuote,
-		`+`:    it.binop,
-		`-`:    it.binop,
-		`DROP`: it.drop,
-		`DUP`:  it.dup,
-		`EMIT`: it.emit,
-		`OVER`: it.over,
-		`SWAP`: it.swap,
+		`\`:          it.backslash,
+		`(`:          it.paren,
+		`:`:          it.colon,
+		`;`:          it.semicolon,
+		`.`:          it.dot,
+		`."`:         it.dotQuote,
+		`+`:          it.binop,
+		`-`:          it.binop,
+		`.S`:         it.dotS,
+		`CLEARSTACK`: it.clearstack,
+		`DROP`:       it.drop,
+		`DUP`:        it.dup,
+		`EMIT`:       it.emit,
+		`OVER`:       it.over,
+		`SWAP`:       it.swap,
 	}
 
 	it.builtinImmediate = map[string]bool{
@@ -159,6 +160,12 @@ func (it *Interpreter) binop(op string) {
 		it.fatalErrorf("unknown binary operator '%s'", op)
 	}
 	it.dataStack.Push(result)
+}
+
+// clearstack implements the CLEARSTACK word.
+// It clears the data stack, effectively removing all values from it.
+func (it *Interpreter) clearstack(string) {
+	it.dataStack = Stack[int64]{}
 }
 
 // drop implements the DROP word.
