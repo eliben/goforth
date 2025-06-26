@@ -15,6 +15,7 @@ func (it *Interpreter) setupBuiltins() {
 		`."`:         it.dotQuote,
 		`+`:          it.binop,
 		`-`:          it.binop,
+		`*`:          it.binop,
 		`.S`:         it.dotS,
 		`CLEARSTACK`: it.clearstack,
 		`DROP`:       it.drop,
@@ -22,6 +23,10 @@ func (it *Interpreter) setupBuiltins() {
 		`EMIT`:       it.emit,
 		`OVER`:       it.over,
 		`SWAP`:       it.swap,
+		`R>`:         it.fromR,
+		`>R`:         it.toR,
+		`R@`:         it.copyFromR,
+		`RDROP`:      it.dropR,
 	}
 
 	it.builtinImmediate = map[string]bool{
@@ -156,6 +161,8 @@ func (it *Interpreter) binop(op string) {
 		result = v1 + v2
 	case "-":
 		result = v1 - v2
+	case "*":
+		result = v1 * v2
 	default:
 		it.fatalErrorf("unknown binary operator '%s'", op)
 	}
@@ -207,4 +214,35 @@ func (it *Interpreter) over(string) {
 	it.dataStack.Push(v2)
 	it.dataStack.Push(v1)
 	it.dataStack.Push(v2)
+}
+
+// fromR implements the R> word.
+// It pops a value from the return stack and pushes it onto the data stack.
+func (it *Interpreter) fromR(string) {
+	v := it.popReturnStack()
+	it.dataStack.Push(v)
+}
+
+// toR implements the >R word.
+// It pops a value from the data stack and pushes it onto the return stack.
+func (it *Interpreter) toR(string) {
+	v := it.popDataStack()
+	it.returnStack.Push(v)
+}
+
+// copyFromR implements the R@ word.
+// It copies the value from the top of the return stack to the data stack
+// without removing it from the return stack.
+func (it *Interpreter) copyFromR(string) {
+	if it.returnStack.Len() == 0 {
+		it.fatalErrorf("R@ called with empty return stack")
+	}
+	v := it.returnStack.Get(it.returnStack.Len() - 1)
+	it.dataStack.Push(v)
+}
+
+// dropR implements the RDROP word.
+// Drops the value from the top of the return stack.
+func (it *Interpreter) dropR(string) {
+	it.popReturnStack()
 }

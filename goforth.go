@@ -6,9 +6,6 @@ import (
 	"strings"
 )
 
-// TODO: need to provide a nice way to define words in forth, i.e. the
-// interpreter will load a forth file of builtins.
-
 type Interpreter struct {
 	dataStack   Stack[int64]
 	returnStack Stack[int64]
@@ -120,6 +117,16 @@ func (it *Interpreter) popDataStack() int64 {
 	value, ok := it.dataStack.Pop()
 	if !ok {
 		it.fatalErrorf("data stack underflow")
+	}
+	return value
+}
+
+// popReturnStack pops a value from the return stack and returns it.
+// If the stack is empty, it reports a stack underflow error.
+func (it *Interpreter) popReturnStack() int64 {
+	value, ok := it.returnStack.Pop()
+	if !ok {
+		it.fatalErrorf("return stack underflow")
 	}
 	return value
 }
