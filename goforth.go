@@ -27,15 +27,12 @@ type Interpreter struct {
 
 	stdout strings.Builder
 
-	builtinsMap map[string]func(string)
-
 	// builtinImmediate marks which built-in words are IMMEDIATE. These
 	// words are executed when encountered during compilation.
 	builtinImmediate map[string]bool
 
-	// dict is the Forth dictionary of user-defined words. Each word is
-	// mapped to an pointer in input where the word's definition is.
-	dict map[string]int
+	// dict is the Forth dictionary ... TODO
+	dict map[string]DictEntry
 }
 
 func NewInterpreter() *Interpreter {
@@ -44,7 +41,7 @@ func NewInterpreter() *Interpreter {
 		returnStack: Stack[int64]{},
 		ptrStack:    Stack[int]{},
 		compileMode: false,
-		dict:        make(map[string]int),
+		dict:        make(map[string]DictEntry),
 	}
 	it.setupBuiltins()
 	return it
@@ -71,15 +68,22 @@ func (it *Interpreter) doRun() {
 		// Since this is an interpreter, we handle builtins and user-defined
 		// words slightly differently.
 		wordUpper := strings.ToUpper(word)
-		if ptr, ok := it.dict[wordUpper]; ok {
-			// If the word is in the dictionary, execute it. Save the current
-			// pointer on the stack and set it to the location of the word's
-			// definition. In the next loop iteration, the interpreter will
-			// continue executing from that point.
-			it.ptrStack.Push(it.inputPtr)
-			it.inputPtr = ptr
-		} else if fn, ok := it.builtinsMap[wordUpper]; ok {
-			fn(wordUpper)
+		if entry, ok := it.dict[wordUpper]; ok {
+			switch entry := entry.(type) {
+			case UserFunc:
+				// Execute user-defined word. Save the current pointer on the
+				// stack and set it to the location of the word's definition. In
+				// the next loop iteration, the interpreter will continue
+				// executing from that point.
+				it.ptrStack.Push(it.inputPtr)
+				it.inputPtr = entry.Ptr
+			case Value:
+				it.dataStack.Push(entry.Val)
+			case BuiltinFunc:
+				entry.Impl(wordUpper)
+			default:
+				it.fatalErrorf("unknown dictionary entry type for word '%s'", wordUpper)
+			}
 		} else {
 			// Try to parse the word as an integer.
 			if value, err := strconv.ParseInt(word, 10, 64); err == nil {

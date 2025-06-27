@@ -6,32 +6,34 @@ import (
 )
 
 func (it *Interpreter) setupBuiltins() {
-	it.builtinsMap = map[string]func(string){
-		`\`:          it.backslash,
-		`(`:          it.paren,
-		`:`:          it.colon,
-		`;`:          it.semicolon,
-		`.`:          it.dot,
-		`."`:         it.dotQuote,
-		`+`:          it.binop,
-		`-`:          it.binop,
-		`*`:          it.binop,
-		`.S`:         it.dotS,
-		`CELL`:       it.cell,
-		`CELL+`:      it.cellPlus,
-		`CELLS`:      it.cells,
-		`CLEARSTACK`: it.clearstack,
-		`DROP`:       it.drop,
-		`DUP`:        it.dup,
-		`EMIT`:       it.emit,
-		`HERE`:       it.here,
-		`OVER`:       it.over,
-		`SWAP`:       it.swap,
-		`R>`:         it.fromR,
-		`>R`:         it.toR,
-		`R@`:         it.copyFromR,
-		`RDROP`:      it.dropR,
+	addBuiltin := func(name string, fn func(string)) {
+		it.dict[strings.ToUpper(name)] = BuiltinFunc{Impl: fn}
 	}
+
+	addBuiltin(`\`, it.backslash)
+	addBuiltin(`(`, it.paren)
+	addBuiltin(`:`, it.colon)
+	addBuiltin(`;`, it.semicolon)
+	addBuiltin(`.`, it.dot)
+	addBuiltin(`."`, it.dotQuote)
+	addBuiltin(`+`, it.binop)
+	addBuiltin(`-`, it.binop)
+	addBuiltin(`*`, it.binop)
+	addBuiltin(`.S`, it.dotS)
+	addBuiltin(`CELL`, it.cell)
+	addBuiltin(`CELL+`, it.cellPlus)
+	addBuiltin(`CELLS`, it.cells)
+	addBuiltin(`CLEARSTACK`, it.clearstack)
+	addBuiltin(`DROP`, it.drop)
+	addBuiltin(`DUP`, it.dup)
+	addBuiltin(`EMIT`, it.emit)
+	addBuiltin(`HERE`, it.here)
+	addBuiltin(`OVER`, it.over)
+	addBuiltin(`SWAP`, it.swap)
+	addBuiltin(`R>`, it.fromR)
+	addBuiltin(`>R`, it.toR)
+	addBuiltin(`R@`, it.copyFromR)
+	addBuiltin(`RDROP`, it.dropR)
 
 	it.builtinImmediate = map[string]bool{
 		`."`: true,
@@ -96,7 +98,7 @@ func (it *Interpreter) colon(string) {
 		// This is a no-op.
 		return
 	}
-	it.dict[strings.ToUpper(defName)] = it.inputPtr
+	it.dict[strings.ToUpper(defName)] = UserFunc{Ptr: it.inputPtr}
 
 	// Now we need to skip the definition until we find a ';'.
 	for {
@@ -111,9 +113,9 @@ func (it *Interpreter) colon(string) {
 
 		// If the word is IMMEDIATE, execute it. It may manipulate the
 		// input pointer. Otherwise, just keep going.
-		if fn, ok := it.builtinsMap[strings.ToUpper(word)]; ok {
-			if it.builtinImmediate[word] {
-				fn(word)
+		if entry, ok := it.dict[strings.ToUpper(word)]; ok {
+			if bfn, ok := entry.(BuiltinFunc); ok && it.builtinImmediate[word] {
+				bfn.Impl(word)
 			}
 		}
 	}
