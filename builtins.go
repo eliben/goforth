@@ -24,6 +24,7 @@ func (it *Interpreter) setupBuiltins() {
 		`DROP`:       it.drop,
 		`DUP`:        it.dup,
 		`EMIT`:       it.emit,
+		`HERE`:       it.here,
 		`OVER`:       it.over,
 		`SWAP`:       it.swap,
 		`R>`:         it.fromR,
@@ -217,6 +218,11 @@ func (it *Interpreter) emit(string) {
 		it.fatalErrorf("value '%d' out of range for EMIT", value)
 	}
 	it.stdout.WriteByte(byte(value))
+}
+
+// here implements the HERE word.
+func (it *Interpreter) here(string) {
+	it.dataStack.Push(int64(it.memptr))
 }
 
 // swap implements the SWAP word.
