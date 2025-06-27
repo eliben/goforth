@@ -24,6 +24,7 @@ func (it *Interpreter) setupBuiltins() {
 	addBuiltin(`CELL+`, it.cellPlus)
 	addBuiltin(`CELLS`, it.cells)
 	addBuiltin(`CLEARSTACK`, it.clearstack)
+	addBuiltin(`CONSTANT`, it.constant)
 	addBuiltin(`DROP`, it.drop)
 	addBuiltin(`DUP`, it.dup)
 	addBuiltin(`EMIT`, it.emit)
@@ -198,6 +199,17 @@ func (it *Interpreter) clearstack(string) {
 	it.dataStack = Stack[int64]{}
 }
 
+// constant implements the CONSTANT word.
+func (it *Interpreter) constant(name string) {
+	// The next word is the name of the constant.
+	defName := it.nextWord()
+	if defName == "" {
+		it.fatalErrorf("CONSTANT called with no name")
+	}
+	val := it.popDataStack()
+	it.dict[strings.ToUpper(defName)] = Value{Val: val}
+}
+
 // drop implements the DROP word.
 func (it *Interpreter) drop(string) {
 	it.popDataStack()
@@ -211,7 +223,6 @@ func (it *Interpreter) dup(string) {
 	it.dataStack.Push(value)
 }
 
-// TODO: reimplement the "10 emit" with CR once defined...
 // emit implements the EMIT word.
 // Print the TOS value as a character to stdout.
 func (it *Interpreter) emit(string) {
