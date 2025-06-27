@@ -17,6 +17,9 @@ func (it *Interpreter) setupBuiltins() {
 		`-`:          it.binop,
 		`*`:          it.binop,
 		`.S`:         it.dotS,
+		`CELL`:       it.cell,
+		`CELL+`:      it.cellPlus,
+		`CELLS`:      it.cells,
 		`CLEARSTACK`: it.clearstack,
 		`DROP`:       it.drop,
 		`DUP`:        it.dup,
@@ -167,6 +170,23 @@ func (it *Interpreter) binop(op string) {
 		it.fatalErrorf("unknown binary operator '%s'", op)
 	}
 	it.dataStack.Push(result)
+}
+
+// cell implements the CELL word. We use 8 bytes as the size of a cell.
+func (it *Interpreter) cell(string) {
+	it.dataStack.Push(8)
+}
+
+// cellPlus implements the CELL+ word.
+func (it *Interpreter) cellPlus(string) {
+	n := it.popDataStack()
+	it.dataStack.Push(n + 8)
+}
+
+// cells implements the CELLS word.
+func (it *Interpreter) cells(string) {
+	count := it.popDataStack()
+	it.dataStack.Push(count * 8)
 }
 
 // clearstack implements the CLEARSTACK word.
