@@ -21,6 +21,7 @@ func (it *Interpreter) setupBuiltins() {
 	addBuiltin(`-`, it.binop)
 	addBuiltin(`*`, it.binop)
 	addBuiltin(`!`, it.exclamation)
+	addBuiltin(`+!`, it.plusExclamation)
 	addBuiltin(`?`, it.question)
 	addBuiltin(`@`, it.at)
 	addBuiltin(`.S`, it.dotS)
@@ -238,6 +239,18 @@ func (it *Interpreter) exclamation(string) {
 		it.fatalErrorf("address %d out of bounds for !", addr)
 	}
 
+	binary.LittleEndian.PutUint64(it.memory[addr:], uint64(value))
+}
+
+// plusExclamation implements the +! word.
+func (it *Interpreter) plusExclamation(string) {
+	addr := it.popDataStack()
+	addend := it.popDataStack()
+	if addr < 0 || addr >= int64(it.memptr) {
+		it.fatalErrorf("address %d out of bounds for +!", addr)
+	}
+
+	value := int64(binary.LittleEndian.Uint64(it.memory[addr:])) + addend
 	binary.LittleEndian.PutUint64(it.memory[addr:], uint64(value))
 }
 
