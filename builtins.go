@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/binary"
 	"fmt"
 	"strings"
 )
@@ -19,12 +20,17 @@ func (it *Interpreter) setupBuiltins() {
 	addBuiltin(`+`, it.binop)
 	addBuiltin(`-`, it.binop)
 	addBuiltin(`*`, it.binop)
+	addBuiltin(`!`, it.exclamation)
+	addBuiltin(`@`, it.at)
 	addBuiltin(`.S`, it.dotS)
+	addBuiltin(`ALLOT`, it.allot)
 	addBuiltin(`CELL`, it.cell)
 	addBuiltin(`CELL+`, it.cellPlus)
 	addBuiltin(`CELLS`, it.cells)
 	addBuiltin(`CLEARSTACK`, it.clearstack)
 	addBuiltin(`CONSTANT`, it.constant)
+	addBuiltin(`CREATE`, it.create)
+	// addBuiltin(`VARIABLE`, it.variable)
 	addBuiltin(`DROP`, it.drop)
 	addBuiltin(`DUP`, it.dup)
 	addBuiltin(`EMIT`, it.emit)
@@ -176,6 +182,19 @@ func (it *Interpreter) binop(op string) {
 	it.dataStack.Push(result)
 }
 
+// allot implements the ALLOT word.
+func (it *Interpreter) allot(string) {
+	// The next word is the number of bytes to allot.
+	count := int(it.popDataStack())
+	if count < 0 {
+		it.fatalErrorf("ALLOT called with negative count %d", count)
+	}
+	if it.memptr+count > len(it.memory) {
+		it.fatalErrorf("ALLOT exceeds memory bounds: %d + %d > %d", it.memptr, count, len(it.memory))
+	}
+	it.memptr += count
+}
+
 // cell implements the CELL word. We use 8 bytes as the size of a cell.
 func (it *Interpreter) cell(string) {
 	it.dataStack.Push(8)
@@ -200,7 +219,7 @@ func (it *Interpreter) clearstack(string) {
 }
 
 // constant implements the CONSTANT word.
-func (it *Interpreter) constant(name string) {
+func (it *Interpreter) constant(string) {
 	// The next word is the name of the constant.
 	defName := it.nextWord()
 	if defName == "" {
@@ -208,6 +227,42 @@ func (it *Interpreter) constant(name string) {
 	}
 	val := it.popDataStack()
 	it.dict[strings.ToUpper(defName)] = Value{Val: val}
+}
+
+// exclamation implements the ! word.
+func (it *Interpreter) exclamation(string) {
+	addr := it.popDataStack()
+	value := it.popDataStack()
+	if addr < 0 || addr >= int64(it.memptr) {
+		it.fatalErrorf("address %d out of bounds for !", addr)
+	}
+
+	binary.LittleEndian.PutUint64(it.memory[addr:], uint64(value))
+}
+
+// at implements the @ word.
+func (it *Interpreter) at(string) {
+	addr := it.popDataStack()
+	if addr < 0 || addr >= int64(it.memptr) {
+		it.fatalErrorf("address %d out of bounds for @", addr)
+	}
+
+	value := binary.LittleEndian.Uint64(it.memory[addr:])
+	it.dataStack.Push(int64(value))
+}
+
+// create implements the CREATE word.
+func (it *Interpreter) create(string) {
+	// The next word is the name of the created word.
+	defName := it.nextWord()
+	if defName == "" {
+		it.fatalErrorf("CREATE called with no name")
+	}
+
+	it.dict[strings.ToUpper(defName)] = Value{Val: int64(it.memptr)}
+
+	// TODO this is only for VARIABLE
+	// it.memptr += 8
 }
 
 // drop implements the DROP word.
