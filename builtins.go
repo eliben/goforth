@@ -21,6 +21,7 @@ func (it *Interpreter) setupBuiltins() {
 	addBuiltin(`-`, it.binop)
 	addBuiltin(`*`, it.binop)
 	addBuiltin(`!`, it.exclamation)
+	addBuiltin(`?`, it.question)
 	addBuiltin(`@`, it.at)
 	addBuiltin(`.S`, it.dotS)
 	addBuiltin(`ALLOT`, it.allot)
@@ -30,7 +31,7 @@ func (it *Interpreter) setupBuiltins() {
 	addBuiltin(`CLEARSTACK`, it.clearstack)
 	addBuiltin(`CONSTANT`, it.constant)
 	addBuiltin(`CREATE`, it.create)
-	// addBuiltin(`VARIABLE`, it.variable)
+	addBuiltin(`VARIABLE`, it.variable)
 	addBuiltin(`DROP`, it.drop)
 	addBuiltin(`DUP`, it.dup)
 	addBuiltin(`EMIT`, it.emit)
@@ -240,6 +241,17 @@ func (it *Interpreter) exclamation(string) {
 	binary.LittleEndian.PutUint64(it.memory[addr:], uint64(value))
 }
 
+// question implements the ? word.
+func (it *Interpreter) question(string) {
+	addr := it.popDataStack()
+	if addr < 0 || addr >= int64(it.memptr) {
+		it.fatalErrorf("address %d out of bounds for ?", addr)
+	}
+
+	value := binary.LittleEndian.Uint64(it.memory[addr:])
+	it.stdout.WriteString(fmt.Sprintf("%d ", int64(value)))
+}
+
 // at implements the @ word.
 func (it *Interpreter) at(string) {
 	addr := it.popDataStack()
@@ -263,6 +275,18 @@ func (it *Interpreter) create(string) {
 
 	// TODO this is only for VARIABLE
 	// it.memptr += 8
+}
+
+// variable implements the VARIABLE word.
+func (it *Interpreter) variable(string) {
+	// The next word is the name of the created word.
+	defName := it.nextWord()
+	if defName == "" {
+		it.fatalErrorf("CREATE called with no name")
+	}
+
+	it.dict[strings.ToUpper(defName)] = Value{Val: int64(it.memptr)}
+	it.memptr += 8
 }
 
 // drop implements the DROP word.

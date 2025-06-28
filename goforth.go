@@ -6,9 +6,6 @@ import (
 	"strings"
 )
 
-// TODO: now that I have the dict with Value, implement CREATE and VARIABLE,
-// and then allot and memory stuff...
-
 type Interpreter struct {
 	dataStack   Stack[int64]
 	returnStack Stack[int64]
