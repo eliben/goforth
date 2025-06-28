@@ -285,9 +285,6 @@ func (it *Interpreter) create(string) {
 	}
 
 	it.dict[strings.ToUpper(defName)] = Value{Val: int64(it.memptr)}
-
-	// TODO this is only for VARIABLE
-	// it.memptr += 8
 }
 
 // variable implements the VARIABLE word.

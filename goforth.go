@@ -13,7 +13,8 @@ type Interpreter struct {
 	memory [64 * 1024]byte
 	memptr int
 
-	// compileMode indicates whether the interpreter is in compile mode.
+	// compileMode indicates whether the interpreter is in compile mode,
+	// which is required for some words to know how to behave.
 	compileMode bool
 
 	input    string
@@ -31,22 +32,28 @@ type Interpreter struct {
 	// words are executed when encountered during compilation.
 	builtinImmediate map[string]bool
 
-	// dict is the Forth dictionary ... TODO
+	// dict is the Forth dictionary
 	dict map[string]DictEntry
 }
 
+// NewInterpreter creates a new Interpreter instance.
 func NewInterpreter() *Interpreter {
 	it := &Interpreter{
-		dataStack:   Stack[int64]{},
-		returnStack: Stack[int64]{},
-		ptrStack:    Stack[int]{},
-		compileMode: false,
-		dict:        make(map[string]DictEntry),
+		dataStack:        Stack[int64]{},
+		returnStack:      Stack[int64]{},
+		memptr:           0,
+		ptrStack:         Stack[int]{},
+		compileMode:      false,
+		dict:             make(map[string]DictEntry),
+		builtinImmediate: make(map[string]bool),
 	}
 	it.setupBuiltins()
 	return it
 }
 
+// Run interprets the input string as a Forth program. State is retained
+// between runs, so you can call Run multiple times with different input
+// strings to execute multiple Forth programs in the same interpreter instance.
 func (it *Interpreter) Run(input string) {
 	it.input = input
 	it.inputPtr = 0
