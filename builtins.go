@@ -20,6 +20,8 @@ func (it *Interpreter) setupBuiltins() {
 	addBuiltin(`+`, it.binop)
 	addBuiltin(`-`, it.binop)
 	addBuiltin(`*`, it.binop)
+	addBuiltin(`/`, it.binop)
+	addBuiltin(`MOD`, it.binop)
 	addBuiltin(`,`, it.comma)
 	addBuiltin(`!`, it.exclamation)
 	addBuiltin(`+!`, it.plusExclamation)
@@ -172,13 +174,23 @@ func (it *Interpreter) binop(op string) {
 	v2 := it.popDataStack()
 	v1 := it.popDataStack()
 	var result int64
-	switch op {
+	switch strings.ToUpper(op) {
 	case "+":
 		result = v1 + v2
 	case "-":
 		result = v1 - v2
 	case "*":
 		result = v1 * v2
+	case "MOD":
+		if v2 == 0 {
+			it.fatalErrorf("division by zero in 'MOD'")
+		}
+		result = v1 % v2
+	case "/":
+		if v2 == 0 {
+			it.fatalErrorf("division by zero in '/'")
+		}
+		result = v1 / v2
 	default:
 		it.fatalErrorf("unknown binary operator '%s'", op)
 	}
