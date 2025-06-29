@@ -20,6 +20,7 @@ func (it *Interpreter) setupBuiltins() {
 	addBuiltin(`+`, it.binop)
 	addBuiltin(`-`, it.binop)
 	addBuiltin(`*`, it.binop)
+	addBuiltin(`,`, it.comma)
 	addBuiltin(`!`, it.exclamation)
 	addBuiltin(`+!`, it.plusExclamation)
 	addBuiltin(`?`, it.question)
@@ -229,6 +230,18 @@ func (it *Interpreter) constant(string) {
 	}
 	val := it.popDataStack()
 	it.dict[strings.ToUpper(defName)] = Value{Val: val}
+}
+
+// comma implements the , word.
+func (it *Interpreter) comma(string) {
+	// The next word is the value to store in memory.
+	value := it.popDataStack()
+	if it.memptr+8 > len(it.memory) {
+		it.fatalErrorf("memory overflow in ,: cannot store value %d at address %d", value, it.memptr)
+	}
+
+	binary.LittleEndian.PutUint64(it.memory[it.memptr:], uint64(value))
+	it.memptr += 8
 }
 
 // exclamation implements the ! word.
