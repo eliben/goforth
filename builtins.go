@@ -450,8 +450,7 @@ func (it *Interpreter) if_(string) {
 		// Skip until we encounter:
 		// - ELSE: in which case we execute the words until THEN
 		// - THEN: in which case the IF statement is done
-		terminator := it.skipUntil("ELSE", "THEN")
-		if terminator == "ELSE" {
+		if it.skipUntil("ELSE", "THEN") == "ELSE" {
 			for {
 				switch word := it.nextWord(); word {
 				case "":
@@ -468,15 +467,15 @@ func (it *Interpreter) if_(string) {
 	}
 }
 
-// skipUntil skips words until it finds one of the specified words.
+// skipUntil skips input words until it finds one of the specified stopWords.
 // It returns the word that was found.
-func (it *Interpreter) skipUntil(words ...string) string {
+func (it *Interpreter) skipUntil(stopWords ...string) string {
 	for {
 		nextWord := it.nextWord()
 		if nextWord == "" {
-			it.fatalErrorf("unable to find terminating %v", words)
+			it.fatalErrorf("unable to find terminating %v", stopWords)
 		}
-		if slices.Contains(words, nextWord) {
+		if slices.Contains(stopWords, nextWord) {
 			return nextWord
 		}
 	}
