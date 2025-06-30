@@ -9,7 +9,7 @@ import (
 
 func (it *Interpreter) setupBuiltins() {
 	addBuiltin := func(name string, fn func(string)) {
-		it.dict[strings.ToUpper(name)] = BuiltinFunc{Impl: fn}
+		it.dict[name] = BuiltinFunc{Impl: fn}
 	}
 
 	addBuiltin(`\`, it.backslash)
@@ -49,7 +49,7 @@ func (it *Interpreter) setupBuiltins() {
 	addBuiltin(`>R`, it.toR)
 	addBuiltin(`R@`, it.copyFromR)
 	addBuiltin(`RDROP`, it.dropR)
-	addBuiltin(`if`, it.if_)
+	addBuiltin(`IF`, it.if_)
 
 	it.builtinImmediate = map[string]bool{
 		`."`: true,
@@ -114,7 +114,7 @@ func (it *Interpreter) colon(string) {
 		// This is a no-op.
 		return
 	}
-	it.dict[strings.ToUpper(defName)] = UserFunc{Ptr: it.inputPtr}
+	it.dict[defName] = UserFunc{Ptr: it.inputPtr}
 
 	// Now we need to skip the definition until we find a ';'.
 	for {
@@ -129,7 +129,7 @@ func (it *Interpreter) colon(string) {
 
 		// If the word is IMMEDIATE, execute it. It may manipulate the
 		// input pointer. Otherwise, just keep going.
-		if entry, ok := it.dict[strings.ToUpper(word)]; ok {
+		if entry, ok := it.dict[word]; ok {
 			if bfn, ok := entry.(BuiltinFunc); ok && it.builtinImmediate[word] {
 				bfn.Impl(word)
 			}
@@ -178,7 +178,7 @@ func (it *Interpreter) binop(op string) {
 	v2 := it.popDataStack()
 	v1 := it.popDataStack()
 	var result int64
-	switch strings.ToUpper(op) {
+	switch op {
 	case "+":
 		result = v1 + v2
 	case "-":
@@ -257,7 +257,7 @@ func (it *Interpreter) constant(string) {
 		it.fatalErrorf("CONSTANT called with no name")
 	}
 	val := it.popDataStack()
-	it.dict[strings.ToUpper(defName)] = Value{Val: val}
+	it.dict[defName] = Value{Val: val}
 }
 
 // comma implements the , word.
@@ -325,7 +325,7 @@ func (it *Interpreter) create(string) {
 		it.fatalErrorf("CREATE called with no name")
 	}
 
-	it.dict[strings.ToUpper(defName)] = Value{Val: int64(it.memptr)}
+	it.dict[defName] = Value{Val: int64(it.memptr)}
 }
 
 // variable implements the VARIABLE word.
@@ -336,7 +336,7 @@ func (it *Interpreter) variable(string) {
 		it.fatalErrorf("CREATE called with no name")
 	}
 
-	it.dict[strings.ToUpper(defName)] = Value{Val: int64(it.memptr)}
+	it.dict[defName] = Value{Val: int64(it.memptr)}
 	it.memptr += 8
 }
 
@@ -436,10 +436,10 @@ func (it *Interpreter) if_(string) {
 				it.fatalErrorf("IF statement not terminated with ELSE or THEN")
 			}
 
-			if strings.ToUpper(word) == "ELSE" {
+			if word == "ELSE" {
 				it.skipUntil("THEN")
 				break
-			} else if strings.ToUpper(word) == "THEN" {
+			} else if word == "THEN" {
 				// End of the IF statement.
 				break
 			} else {
@@ -452,14 +452,14 @@ func (it *Interpreter) if_(string) {
 		// - ELSE: in which case we execute the words until THEN
 		// - THEN: in which case the IF statement is done
 		terminator := it.skipUntil("ELSE", "THEN")
-		if strings.ToUpper(terminator) == "ELSE" {
+		if terminator == "ELSE" {
 			for {
 				word := it.nextWord()
 				if word == "" {
 					it.fatalErrorf("IF statement not terminated with THEN")
 				}
 
-				if strings.ToUpper(word) == "THEN" {
+				if word == "THEN" {
 					// End of the IF statement.
 					break
 				} else {
@@ -479,7 +479,7 @@ func (it *Interpreter) skipUntil(words ...string) string {
 		if nextWord == "" {
 			it.fatalErrorf("unable to find terminating %v", words)
 		}
-		if slices.Contains(words, strings.ToUpper(nextWord)) {
+		if slices.Contains(words, nextWord) {
 			return nextWord
 		}
 	}

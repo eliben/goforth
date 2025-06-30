@@ -60,8 +60,6 @@ func (it *Interpreter) Run(input string) {
 	it.doRun()
 }
 
-// TODO: try to fold ToUpper into nextWord?!
-
 // doRun interprets the input string as a Forth program, starting at
 // the current input pointer.
 func (it *Interpreter) doRun() {
@@ -82,8 +80,7 @@ func (it *Interpreter) executeWord(word string) {
 	// as a number.
 	// Since this is an interpreter, we handle builtins and user-defined
 	// words slightly differently.
-	wordUpper := strings.ToUpper(word)
-	if entry, ok := it.dict[wordUpper]; ok {
+	if entry, ok := it.dict[word]; ok {
 		switch entry := entry.(type) {
 		case UserFunc:
 			// Execute user-defined word. Save the current pointer on the
@@ -95,9 +92,9 @@ func (it *Interpreter) executeWord(word string) {
 		case Value:
 			it.dataStack.Push(entry.Val)
 		case BuiltinFunc:
-			entry.Impl(wordUpper)
+			entry.Impl(word)
 		default:
-			it.fatalErrorf("unknown dictionary entry type for word '%s'", wordUpper)
+			it.fatalErrorf("unknown dictionary entry type for word '%s'", word)
 		}
 	} else {
 		// Try to parse the word as an integer.
@@ -164,7 +161,7 @@ func (it *Interpreter) nextWord() string {
 
 	word := it.input[start:it.inputPtr]
 	it.skipWhitespace()
-	return word
+	return strings.ToUpper(word)
 }
 
 // skipWhitespace skips leading whitespace characters in the input string.
