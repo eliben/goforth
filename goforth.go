@@ -70,34 +70,39 @@ func (it *Interpreter) doRun() {
 			break
 		}
 
-		// If this is a defined word, execute it. Otherwise, try to parse it
-		// as a number.
-		// Since this is an interpreter, we handle builtins and user-defined
-		// words slightly differently.
-		wordUpper := strings.ToUpper(word)
-		if entry, ok := it.dict[wordUpper]; ok {
-			switch entry := entry.(type) {
-			case UserFunc:
-				// Execute user-defined word. Save the current pointer on the
-				// stack and set it to the location of the word's definition. In
-				// the next loop iteration, the interpreter will continue
-				// executing from that point.
-				it.ptrStack.Push(it.inputPtr)
-				it.inputPtr = entry.Ptr
-			case Value:
-				it.dataStack.Push(entry.Val)
-			case BuiltinFunc:
-				entry.Impl(wordUpper)
-			default:
-				it.fatalErrorf("unknown dictionary entry type for word '%s'", wordUpper)
-			}
+		it.executeWord(word)
+	}
+}
+
+// executeWord executes a single word in the Forth program.
+func (it *Interpreter) executeWord(word string) {
+	// If this is a defined word, execute it. Otherwise, try to parse it
+	// as a number.
+	// Since this is an interpreter, we handle builtins and user-defined
+	// words slightly differently.
+	wordUpper := strings.ToUpper(word)
+	if entry, ok := it.dict[wordUpper]; ok {
+		switch entry := entry.(type) {
+		case UserFunc:
+			// Execute user-defined word. Save the current pointer on the
+			// stack and set it to the location of the word's definition. In
+			// the next loop iteration, the interpreter will continue
+			// executing from that point.
+			it.ptrStack.Push(it.inputPtr)
+			it.inputPtr = entry.Ptr
+		case Value:
+			it.dataStack.Push(entry.Val)
+		case BuiltinFunc:
+			entry.Impl(wordUpper)
+		default:
+			it.fatalErrorf("unknown dictionary entry type for word '%s'", wordUpper)
+		}
+	} else {
+		// Try to parse the word as an integer.
+		if value, err := strconv.ParseInt(word, 10, 64); err == nil {
+			it.dataStack.Push(value)
 		} else {
-			// Try to parse the word as an integer.
-			if value, err := strconv.ParseInt(word, 10, 64); err == nil {
-				it.dataStack.Push(value)
-			} else {
-				it.fatalErrorf("unknown word '%s'", word)
-			}
+			it.fatalErrorf("unknown word '%s'", word)
 		}
 	}
 }
