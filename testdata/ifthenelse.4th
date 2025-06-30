@@ -12,8 +12,17 @@
 \ IF with an ELSE that's executed
 0 if ." 0 is true" else ." nah it aint " then -1 . cr
 
+\ using IF in a function
+
+: sayparity 2 mod 0 = if ." even" else ." odd" then ;
+
+3 sayparity cr
+4 sayparity cr
+
 \ ---- OUT ----
 1 is true and after 1
 1 is the only 
 and after 0
-nah it aint -1
+nah it aint -1 
+odd
+even
