@@ -22,6 +22,8 @@ func (it *Interpreter) setupBuiltins() {
 	addBuiltin(`*`, it.binop)
 	addBuiltin(`/`, it.binop)
 	addBuiltin(`MOD`, it.binop)
+	addBuiltin(`=`, it.binop)
+	addBuiltin(`<`, it.binop)
 	addBuiltin(`,`, it.comma)
 	addBuiltin(`!`, it.exclamation)
 	addBuiltin(`+!`, it.plusExclamation)
@@ -191,6 +193,18 @@ func (it *Interpreter) binop(op string) {
 			it.fatalErrorf("division by zero in '/'")
 		}
 		result = v1 / v2
+	case "=":
+		if v1 == v2 {
+			result = -1
+		} else {
+			result = 0
+		}
+	case "<":
+		if v1 < v2 {
+			result = -1
+		} else {
+			result = 0
+		}
 	default:
 		it.fatalErrorf("unknown binary operator '%s'", op)
 	}
