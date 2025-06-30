@@ -431,38 +431,35 @@ func (it *Interpreter) if_(string) {
 	if condition != 0 {
 		// Execute words until we encounter ELSE or THEN.
 		for {
-			word := it.nextWord()
-			if word == "" {
+			switch word := it.nextWord(); word {
+			case "":
 				it.fatalErrorf("IF statement not terminated with ELSE or THEN")
-			}
-
-			if word == "ELSE" {
+			case "ELSE":
+				// ELSE is skipped because the condition was true.
 				it.skipUntil("THEN")
-				break
-			} else if word == "THEN" {
+				return
+			case "THEN":
 				// End of the IF statement.
-				break
-			} else {
-				// Execute the word.
+				return
+			default:
 				it.executeWord(word)
 			}
 		}
 	} else {
+		// Condition is false, so we don't execute the IF clause.
 		// Skip until we encounter:
 		// - ELSE: in which case we execute the words until THEN
 		// - THEN: in which case the IF statement is done
 		terminator := it.skipUntil("ELSE", "THEN")
 		if terminator == "ELSE" {
 			for {
-				word := it.nextWord()
-				if word == "" {
+				switch word := it.nextWord(); word {
+				case "":
 					it.fatalErrorf("IF statement not terminated with THEN")
-				}
-
-				if word == "THEN" {
+				case "THEN":
 					// End of the IF statement.
-					break
-				} else {
+					return
+				default:
 					// Execute the word.
 					it.executeWord(word)
 				}
