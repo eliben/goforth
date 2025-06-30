@@ -57,11 +57,28 @@ func compareExpected(t *testing.T, expected, actual string) {
 			actLine := actualLines[i]
 			if len(expLine) != len(actLine) {
 				t.Logf("line %d: length differs (expected %d, got %d)", i+1, len(expLine), len(actLine))
-				return
 			}
-			for j := 0; j < len(expLine); j++ {
-				if expLine[j] != actLine[j] {
-					t.Logf("line %d, offset %d: expected '%c', got '%c'", i+1, j+1, expLine[j], actLine[j])
+			for j := 0; j < max(len(expLine), len(actLine)); j++ {
+				var exp, act string
+				if j < len(expLine) {
+					exp = string(expLine[j])
+				} else {
+					exp = "<none>"
+				}
+				if j < len(actLine) {
+					act = string(actLine[j])
+				} else {
+					act = "<none>"
+				}
+
+				if exp != act {
+					t.Logf("line %d, offset %d: expected '%s', got '%s'", i+1, j+1, exp, act)
+					if len(exp) == 1 {
+						t.Logf("  (expected character #%d)", exp[0])
+					}
+					if len(act) == 1 {
+						t.Logf("  (actual character #%d)", act[0])
+					}
 					return
 				}
 			}

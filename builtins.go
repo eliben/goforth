@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/binary"
 	"fmt"
+	"slices"
 	"strings"
 )
 
@@ -48,6 +49,7 @@ func (it *Interpreter) setupBuiltins() {
 	addBuiltin(`>R`, it.toR)
 	addBuiltin(`R@`, it.copyFromR)
 	addBuiltin(`RDROP`, it.dropR)
+	addBuiltin(`if`, it.if_)
 
 	it.builtinImmediate = map[string]bool{
 		`."`: true,
@@ -412,4 +414,73 @@ func (it *Interpreter) copyFromR(string) {
 // Drops the value from the top of the return stack.
 func (it *Interpreter) dropR(string) {
 	it.popReturnStack()
+}
+
+// if_ implements the IF word.
+// We interpret IF statements each time we encounter them.
+//
+//	word IF word word ELSE word word THEN word word
+//	     ^
+//	     |
+//
+// When an IF is encountered, it checks the condition on TOS, and if it's true
+// it keeps executing until ELSE or THEN are encountered. If the condition is
+// false, it skips words until the next ELSE or THEN.
+func (it *Interpreter) if_(string) {
+	condition := it.popDataStack()
+	if condition != 0 {
+		// Execute words until we encounter ELSE or THEN.
+		for {
+			word := it.nextWord()
+			if word == "" {
+				it.fatalErrorf("IF statement not terminated with ELSE or THEN")
+			}
+
+			if strings.ToUpper(word) == "ELSE" {
+				it.skipUntil("THEN")
+				break
+			} else if strings.ToUpper(word) == "THEN" {
+				// End of the IF statement.
+				break
+			} else {
+				// Execute the word.
+				it.executeWord(word)
+			}
+		}
+	} else {
+		// Skip until we encounter:
+		// - ELSE: in which case we execute the words until THEN
+		// - THEN: in which case the IF statement is done
+		terminator := it.skipUntil("ELSE", "THEN")
+		if strings.ToUpper(terminator) == "ELSE" {
+			for {
+				word := it.nextWord()
+				if word == "" {
+					it.fatalErrorf("IF statement not terminated with THEN")
+				}
+
+				if strings.ToUpper(word) == "THEN" {
+					// End of the IF statement.
+					break
+				} else {
+					// Execute the word.
+					it.executeWord(word)
+				}
+			}
+		}
+	}
+}
+
+// skipUntil skips words until it finds one of the specified words.
+// It returns the word that was found.
+func (it *Interpreter) skipUntil(words ...string) string {
+	for {
+		nextWord := it.nextWord()
+		if nextWord == "" {
+			it.fatalErrorf("unable to find terminating %v", words)
+		}
+		if slices.Contains(words, strings.ToUpper(nextWord)) {
+			return nextWord
+		}
+	}
 }

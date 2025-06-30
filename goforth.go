@@ -60,6 +60,8 @@ func (it *Interpreter) Run(input string) {
 	it.doRun()
 }
 
+// TODO: try to fold ToUpper into nextWord?!
+
 // doRun interprets the input string as a Forth program, starting at
 // the current input pointer.
 func (it *Interpreter) doRun() {
