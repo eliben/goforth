@@ -26,7 +26,25 @@ else
   -1 if ." inner if ok" then
 then cr
 
+\ Nested IF that doesn't execute in IF
+0 if
+  ." outer if ok "
+  1 if ." and inner if too " then
+else
+  ." outer else 4 "
+then cr
+
+\ Nested IF that doesn't execute in ELSE
+1 if
+  ." outer if ok 5 "
+  1 if ." and inner if too " then
+else
+  ." outer else 5 "
+then cr
+
 \ ---- OUT ----
 outer if ok inner if ok
 outer if ok inner else
 outer else inner if ok
+outer else 4 
+outer if ok 5 and inner if too 

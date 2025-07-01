@@ -470,12 +470,18 @@ func (it *Interpreter) if_(string) {
 // skipUntil skips input words until it finds one of the specified stopWords.
 // It returns the word that was found.
 func (it *Interpreter) skipUntil(stopWords ...string) string {
+	nestingDepth := 0
 	for {
 		nextWord := it.nextWord()
 		if nextWord == "" {
 			it.fatalErrorf("unable to find terminating %v", stopWords)
 		}
-		if slices.Contains(stopWords, nextWord) {
+
+		if nextWord == "IF" {
+			nestingDepth += 1
+		} else if nextWord == "THEN" && nestingDepth > 0 {
+			nestingDepth -= 1
+		} else if slices.Contains(stopWords, nextWord) {
 			return nextWord
 		}
 	}
