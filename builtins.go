@@ -51,6 +51,9 @@ func (it *Interpreter) setupBuiltins() {
 	addBuiltin(`RDROP`, it.dropR)
 	addBuiltin(`IF`, it.if_)
 	addBuiltin(`DO`, it.do_)
+	addBuiltin(`I`, it.loopIndex)
+	addBuiltin(`J`, it.loopIndex)
+	addBuiltin(`K`, it.loopIndex)
 
 	it.builtinImmediate = map[string]bool{
 		`."`: true,
@@ -508,6 +511,27 @@ func (it *Interpreter) do_(string) {
 			it.executeWord(word)
 		}
 	}
+}
+
+// loopIndex implements the I, J, K words.
+func (it *Interpreter) loopIndex(word string) {
+	var stackDepth int
+	switch word {
+	case "I":
+		stackDepth = 0
+	case "J":
+		stackDepth = 1
+	case "K":
+		stackDepth = 2
+	default:
+		it.fatalErrorf("unknown loop index word '%s'", word)
+	}
+
+	if it.loopStack.Len() <= stackDepth {
+		it.fatalErrorf("loop not deep enough for %s", word)
+	}
+	idx := it.loopStack.Get(it.loopStack.Len() - 1 - stackDepth).index
+	it.dataStack.Push(idx)
 }
 
 // skipUntil skips input words until it finds one of the specified stopWords.
