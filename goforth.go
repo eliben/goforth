@@ -26,6 +26,8 @@ type Interpreter struct {
 	// with the input pointer being the "instruction pointer".
 	ptrStack Stack[int]
 
+	loopStack Stack[LoopState]
+
 	stdout strings.Builder
 
 	// builtinImmediate marks which built-in words are IMMEDIATE. These
@@ -39,10 +41,7 @@ type Interpreter struct {
 // NewInterpreter creates a new Interpreter instance.
 func NewInterpreter() *Interpreter {
 	it := &Interpreter{
-		dataStack:        Stack[int64]{},
-		returnStack:      Stack[int64]{},
 		memptr:           0,
-		ptrStack:         Stack[int]{},
 		compileMode:      false,
 		dict:             make(map[string]DictEntry),
 		builtinImmediate: make(map[string]bool),

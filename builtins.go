@@ -50,6 +50,7 @@ func (it *Interpreter) setupBuiltins() {
 	addBuiltin(`R@`, it.copyFromR)
 	addBuiltin(`RDROP`, it.dropR)
 	addBuiltin(`IF`, it.if_)
+	addBuiltin(`DO`, it.do_)
 
 	it.builtinImmediate = map[string]bool{
 		`."`: true,
@@ -426,6 +427,7 @@ func (it *Interpreter) dropR(string) {
 // When an IF is encountered, it checks the condition on TOS, and if it's true
 // it keeps executing until ELSE or THEN are encountered. If the condition is
 // false, it skips words until the next ELSE or THEN.
+// Nested IFs will result in recursive calls of if_ through executeWord.
 func (it *Interpreter) if_(string) {
 	condition := it.popDataStack()
 	if condition != 0 {
@@ -463,6 +465,47 @@ func (it *Interpreter) if_(string) {
 					it.executeWord(word)
 				}
 			}
+		}
+	}
+}
+
+// do_ implements the DO word.
+func (it *Interpreter) do_(string) {
+	start := it.popDataStack()
+	limit := it.popDataStack()
+
+	// Push the current loop state onto the loop stack.
+	it.loopStack.Push(LoopState{
+		index:    start,
+		limit:    limit,
+		startPtr: it.inputPtr,
+	})
+
+	// Execute words until we encounter LOOP. If we encounter a
+	// nested DO, recurse.
+	for {
+		switch word := it.nextWord(); word {
+		case "":
+			it.fatalErrorf("DO statement not terminated with LOOP")
+		case "LOOP":
+			// Pop the loop state from the loop stack, check exit condition;
+			// then either exit, or continue the loop with an updated state.
+			loopState, ok := it.loopStack.Pop()
+			if !ok {
+				it.fatalErrorf("LOOP called with empty loop stack")
+			}
+
+			loopState.index++
+			if loopState.index >= loopState.limit {
+				// Loop is done, exit.
+				return
+			}
+			it.loopStack.Push(loopState)
+			it.inputPtr = loopState.startPtr
+		case "DO":
+			it.do_(word)
+		default:
+			it.executeWord(word)
 		}
 	}
 }
