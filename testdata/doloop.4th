@@ -33,6 +33,21 @@ loop
   i .
 2 +loop cr
 
+." ?do loop basic works" cr
+4 1 do ." hop? " loop cr
+
+." do enters on start=limit" cr
+5 5 do
+  i .
+  i 5 = if leave then
+loop cr
+
+." ?do does not enter on start=limit" cr
+5 5 ?do
+  i .
+  i 5 = if leave then
+loop cr
+
 \ ---- OUT ----
 hop hop hop 
 i=1 i=2 i=3 
@@ -46,3 +61,8 @@ using leave in nested loop
 3 -> 1 2 
 +loop
 1 3 5 7 9 
+?do loop basic works
+hop? hop? hop? 
+do enters on start=limit
+5 
+?do does not enter on start=limit

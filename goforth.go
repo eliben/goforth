@@ -8,7 +8,6 @@ import (
 
 // TODO: make it possible to override the built-in words with user-defined
 // words, and test it works...
-// TODO: implement everything mentioned in https://www.forth.org/svfig/Len/softstak.htm
 
 type Interpreter struct {
 	dataStack   Stack[int64]

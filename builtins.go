@@ -51,6 +51,7 @@ func (it *Interpreter) setupBuiltins() {
 	addBuiltin(`RDROP`, it.dropR)
 	addBuiltin(`IF`, it.if_)
 	addBuiltin(`DO`, it.do_)
+	addBuiltin(`?DO`, it.do_)
 	addBuiltin(`LEAVE`, it.leave)
 	addBuiltin(`I`, it.loopIndex)
 	addBuiltin(`J`, it.loopIndex)
@@ -481,10 +482,18 @@ func (it *Interpreter) if_(string) {
 	}
 }
 
-// do_ implements the DO word.
-func (it *Interpreter) do_(string) {
+// do_ implements the DO and ?DO words.
+func (it *Interpreter) do_(word string) {
 	start := it.popDataStack()
 	limit := it.popDataStack()
+
+	if word == "?DO" && start == limit {
+		// Do not even enter the loop; skip to the closest LOOP and then
+		// skip over it.
+		it.skipLoop()
+		it.nextWord()
+		return
+	}
 
 	// Push the current loop state onto the loop stack.
 	it.loopStack.Push(LoopState{
@@ -598,8 +607,8 @@ func (it *Interpreter) skipIfUntil(stopWords ...string) string {
 	}
 }
 
-// skipLoop() skips the input until it finds a LOOP word. When it finds it,
-// it leaves it in the input so it can be executed in the do_ method.
+// skipLoop() skips the input until it finds a LOOP/+LOOP word. When it finds
+// it, it leaves it in the input so it can be executed in the do_ method.
 func (it *Interpreter) skipLoop() {
 	nestingDepth := 0
 	for {
