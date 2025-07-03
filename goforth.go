@@ -8,6 +8,7 @@ import (
 
 // TODO: make it possible to override the built-in words with user-defined
 // words, and test it works...
+// TODO: implement everything mentioned in https://www.forth.org/svfig/Len/softstak.htm
 
 type Interpreter struct {
 	dataStack   Stack[int64]
@@ -30,6 +31,8 @@ type Interpreter struct {
 	ptrStack Stack[int]
 
 	loopStack Stack[LoopState]
+
+	skippedThenCount int
 
 	stdout strings.Builder
 
@@ -164,6 +167,21 @@ func (it *Interpreter) nextWord() string {
 	word := it.input[start:it.inputPtr]
 	it.skipWhitespace()
 	return strings.ToUpper(word)
+}
+
+// rewindWord rewinds the input pointer to the start of the previous word.
+func (it *Interpreter) rewindWord() {
+	if it.inputPtr == 0 {
+		it.fatalErrorf("cannot rewind input pointer, already at the start")
+	}
+
+	// Move back to the start of the previous word.
+	for it.inputPtr > 0 && isWhitespace(it.input[it.inputPtr-1]) {
+		it.inputPtr--
+	}
+	for it.inputPtr > 0 && !isWhitespace(it.input[it.inputPtr-1]) {
+		it.inputPtr--
+	}
 }
 
 // skipWhitespace skips leading whitespace characters in the input string.

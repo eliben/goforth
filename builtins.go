@@ -51,6 +51,7 @@ func (it *Interpreter) setupBuiltins() {
 	addBuiltin(`RDROP`, it.dropR)
 	addBuiltin(`IF`, it.if_)
 	addBuiltin(`DO`, it.do_)
+	addBuiltin(`LEAVE`, it.leave)
 	addBuiltin(`I`, it.loopIndex)
 	addBuiltin(`J`, it.loopIndex)
 	addBuiltin(`K`, it.loopIndex)
@@ -441,7 +442,7 @@ func (it *Interpreter) if_(string) {
 				it.fatalErrorf("IF statement not terminated with ELSE or THEN")
 			case "ELSE":
 				// ELSE is skipped because the condition was true.
-				it.skipUntil("THEN")
+				it.skipIfUntil("THEN")
 				return
 			case "THEN":
 				// End of the IF statement.
@@ -449,13 +450,18 @@ func (it *Interpreter) if_(string) {
 			default:
 				it.executeWord(word)
 			}
+
+			if it.skippedThenCount > 0 {
+				it.skippedThenCount--
+				return
+			}
 		}
 	} else {
 		// Condition is false, so we don't execute the IF clause.
 		// Skip until we encounter:
 		// - ELSE: in which case we execute the words until THEN
 		// - THEN: in which case the IF statement is done
-		if it.skipUntil("ELSE", "THEN") == "ELSE" {
+		if it.skipIfUntil("ELSE", "THEN") == "ELSE" {
 			for {
 				switch word := it.nextWord(); word {
 				case "":
@@ -484,8 +490,8 @@ func (it *Interpreter) do_(string) {
 		startPtr: it.inputPtr,
 	})
 
-	// Execute words until we encounter LOOP. If we encounter a
-	// nested DO, recurse.
+	// Execute words until we encounter stop words like LOOP or LEAVE. If we
+	// encounter a nested DO, recurse.
 	for {
 		switch word := it.nextWord(); word {
 		case "":
@@ -534,22 +540,55 @@ func (it *Interpreter) loopIndex(word string) {
 	it.dataStack.Push(idx)
 }
 
+// leave implements the LEAVE word.
+func (it *Interpreter) leave(string) {
+	loopState, ok := it.loopStack.Pop()
+	if !ok {
+		it.fatalErrorf("LEAVE called with empty loop stack")
+	}
+	loopState.index = loopState.limit - 1
+	it.loopStack.Push(loopState)
+	it.skipLoop()
+}
+
 // skipUntil skips input words until it finds one of the specified stopWords.
 // It returns the word that was found.
-func (it *Interpreter) skipUntil(stopWords ...string) string {
+func (it *Interpreter) skipIfUntil(stopWords ...string) string {
 	nestingDepth := 0
 	for {
-		nextWord := it.nextWord()
-		if nextWord == "" {
+		word := it.nextWord()
+		if word == "" {
 			it.fatalErrorf("unable to find terminating %v", stopWords)
 		}
 
-		if nextWord == "IF" {
+		if word == "IF" {
 			nestingDepth += 1
-		} else if nextWord == "THEN" && nestingDepth > 0 {
+		} else if word == "THEN" && nestingDepth > 0 {
 			nestingDepth -= 1
-		} else if slices.Contains(stopWords, nextWord) {
-			return nextWord
+		} else if slices.Contains(stopWords, word) {
+			return word
+		}
+	}
+}
+
+// skipLoop() skips the input until it finds a LOOP word. When it finds it,
+// it leaves it in the input so it can be executed in the do_ method.
+func (it *Interpreter) skipLoop() {
+	nestingDepth := 0
+	for {
+		word := it.nextWord()
+		if word == "" {
+			it.fatalErrorf("unable to find LOOP")
+		}
+		if word == "DO" {
+			nestingDepth += 1
+		} else if word == "LOOP" && nestingDepth > 0 {
+			nestingDepth -= 1
+		} else if word == "LOOP" {
+			it.rewindWord() // Rewind to the LOOP word so we can execute it.
+			return
+		} else if word == "THEN" {
+			it.skippedThenCount++
 		}
 	}
 }
