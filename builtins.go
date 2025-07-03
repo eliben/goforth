@@ -514,6 +514,20 @@ func (it *Interpreter) do_(string) {
 			}
 			it.loopStack.Push(loopState)
 			it.inputPtr = loopState.startPtr
+		case "+LOOP":
+			// Same as LOOP, but increments the loop index by the value on TOS.
+			loopState, ok := it.loopStack.Pop()
+			if !ok {
+				it.fatalErrorf("+LOOP called with empty loop stack")
+			}
+			increment := it.popDataStack()
+			loopState.index += increment
+			if loopState.index >= loopState.limit {
+				// Loop is done, exit.
+				return
+			}
+			it.loopStack.Push(loopState)
+			it.inputPtr = loopState.startPtr
 		case "DO":
 			it.do_(word)
 		default:
@@ -589,19 +603,18 @@ func (it *Interpreter) skipIfUntil(stopWords ...string) string {
 func (it *Interpreter) skipLoop() {
 	nestingDepth := 0
 	for {
-		word := it.nextWord()
-		if word == "" {
+		switch word := it.nextWord(); word {
+		case "":
 			it.fatalErrorf("unable to find LOOP")
-		}
-		if word == "DO" {
+		case "DO":
 			nestingDepth += 1
-		} else if word == "LOOP" && nestingDepth > 0 {
+		case "LOOP", "+LOOP":
+			if nestingDepth == 0 {
+				it.rewindWord()
+				return
+			}
 			nestingDepth -= 1
-		} else if word == "LOOP" {
-			// Rewind to the LOOP word so we can properly execute it.
-			it.rewindWord()
-			return
-		} else if word == "THEN" {
+		case "THEN":
 			// Take note of THEN words skipped while leaving a loop. This will
 			// notify an enclosing if_ that a closing THEN was seen.
 			it.skippedThenCount++

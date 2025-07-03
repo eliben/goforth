@@ -28,6 +28,11 @@ loop cr
   loop cr
 loop
 
+." +loop" cr
+10 1 do
+  i .
+2 +loop cr
+
 \ ---- OUT ----
 hop hop hop 
 i=1 i=2 i=3 
@@ -39,3 +44,5 @@ using leave in nested loop
 1 -> 1 2 
 2 -> 1 2 
 3 -> 1 2 
++loop
+1 3 5 7 9 
