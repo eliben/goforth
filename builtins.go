@@ -451,6 +451,9 @@ func (it *Interpreter) if_(string) {
 				it.executeWord(word)
 			}
 
+			// If a THEN was skipped while executing this word, we have to
+			// return. The counter is kept because we may have nested IFs
+			// whose THENs are skipped.
 			if it.skippedThenCount > 0 {
 				it.skippedThenCount--
 				return
@@ -541,6 +544,16 @@ func (it *Interpreter) loopIndex(word string) {
 }
 
 // leave implements the LEAVE word.
+// While IF...THEN and DO...LOOP usually nest nicely (which is handled by
+// recursive calls to if_ and do_), LEAVE presents some challenges because
+// it breaks out of the current loop.
+// When LEAVE is encountered, we have to skip all the words until we encounter
+// LOOP. In the process, we may also skip over THEN words of IFs embedded in
+// the LOOP. Since the enclosing if_ call is still looking for a THEN, we
+// have to keep track of this.
+// Moreover, the do_ method is looking for a terminating LOOP word, so we
+// have to rewind the input pointer to leave LOOP in the input after we
+// find it. This is handled by skipLoop().
 func (it *Interpreter) leave(string) {
 	loopState, ok := it.loopStack.Pop()
 	if !ok {
@@ -585,9 +598,12 @@ func (it *Interpreter) skipLoop() {
 		} else if word == "LOOP" && nestingDepth > 0 {
 			nestingDepth -= 1
 		} else if word == "LOOP" {
-			it.rewindWord() // Rewind to the LOOP word so we can execute it.
+			// Rewind to the LOOP word so we can properly execute it.
+			it.rewindWord()
 			return
 		} else if word == "THEN" {
+			// Take note of THEN words skipped while leaving a loop. This will
+			// notify an enclosing if_ that a closing THEN was seen.
 			it.skippedThenCount++
 		}
 	}

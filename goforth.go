@@ -30,8 +30,11 @@ type Interpreter struct {
 	// with the input pointer being the "instruction pointer".
 	ptrStack Stack[int]
 
+	// loopStack is used to keep track of DO...LOOP loops.
 	loopStack Stack[LoopState]
 
+	// skippedThenCount is the number of THEN words that have been skipped
+	// while leaving a LOOP.
 	skippedThenCount int
 
 	stdout strings.Builder
