@@ -6,9 +6,6 @@ import (
 	"strings"
 )
 
-// TODO: make it possible to override the built-in words with user-defined
-// words, and test it works...
-
 type Interpreter struct {
 	dataStack   Stack[int64]
 	returnStack Stack[int64]
