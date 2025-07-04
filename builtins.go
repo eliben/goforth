@@ -29,6 +29,9 @@ func (it *Interpreter) setupBuiltins() {
 	addBuiltin(`<>`, it.binop)
 	addBuiltin(`<`, it.binop)
 	addBuiltin(`>`, it.binop)
+	addBuiltin(`OR`, it.binop)
+	addBuiltin(`AND`, it.binop)
+	addBuiltin(`INVERT`, it.unop)
 	addBuiltin(`,`, it.comma)
 	addBuiltin(`!`, it.exclamation)
 	addBuiltin(`+!`, it.plusExclamation)
@@ -192,6 +195,8 @@ func (it *Interpreter) unop(op string) {
 		result = value + 1
 	case "1-":
 		result = value - 1
+	case "INVERT":
+		result = ^value
 	default:
 		it.fatalErrorf("unknown unary operator '%s'", op)
 	}
@@ -245,6 +250,10 @@ func (it *Interpreter) binop(op string) {
 		} else {
 			result = 0
 		}
+	case "OR":
+		result = v1 | v2
+	case "AND":
+		result = v1 & v2
 	default:
 		it.fatalErrorf("unknown binary operator '%s'", op)
 	}

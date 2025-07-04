@@ -6,6 +6,8 @@ import (
 	"strings"
 )
 
+// TODO: implement 'recurse'...
+
 type Interpreter struct {
 	dataStack   Stack[int64]
 	returnStack Stack[int64]
