@@ -18,6 +18,8 @@ func (it *Interpreter) setupBuiltins() {
 	addBuiltin(`;`, it.semicolon)
 	addBuiltin(`.`, it.dot)
 	addBuiltin(`."`, it.dotQuote)
+	addBuiltin(`1+`, it.unop)
+	addBuiltin(`1-`, it.unop)
 	addBuiltin(`+`, it.binop)
 	addBuiltin(`-`, it.binop)
 	addBuiltin(`*`, it.binop)
@@ -178,6 +180,22 @@ func (it *Interpreter) dotQuote(string) {
 	} else {
 		it.fatalErrorf("unterminated string in '.\"'")
 	}
+}
+
+// unop implements unary operators that take a single value from the stack,
+// perform the operation, and push the result back onto the stack.
+func (it *Interpreter) unop(op string) {
+	value := it.popDataStack()
+	var result int64
+	switch op {
+	case "1+":
+		result = value + 1
+	case "1-":
+		result = value - 1
+	default:
+		it.fatalErrorf("unknown unary operator '%s'", op)
+	}
+	it.dataStack.Push(result)
 }
 
 // binop implements binary operators like +, -, etc. that take two values from
