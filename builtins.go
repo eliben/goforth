@@ -20,6 +20,7 @@ func (it *Interpreter) setupBuiltins() {
 	addBuiltin(`."`, it.dotQuote)
 	addBuiltin(`1+`, it.unop)
 	addBuiltin(`1-`, it.unop)
+	addBuiltin(`0=`, it.unop)
 	addBuiltin(`+`, it.binop)
 	addBuiltin(`-`, it.binop)
 	addBuiltin(`*`, it.binop)
@@ -197,6 +198,12 @@ func (it *Interpreter) unop(op string) {
 		result = value - 1
 	case "INVERT":
 		result = ^value
+	case "0=":
+		if value == 0 {
+			result = -1
+		} else {
+			result = 0
+		}
 	default:
 		it.fatalErrorf("unknown unary operator '%s'", op)
 	}
