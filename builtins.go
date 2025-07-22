@@ -43,6 +43,9 @@ func (it *Interpreter) setupBuiltins() {
 	addBuiltin(`CELL`, it.cell)
 	addBuiltin(`CELL+`, it.cellPlus)
 	addBuiltin(`CELLS`, it.cells)
+	addBuiltin(`[CHAR]`, it.char)
+	addBuiltin(`CHAR`, it.char)
+	addBuiltin(`CHARS`, it.chars)
 	addBuiltin(`CLEARSTACK`, it.clearstack)
 	addBuiltin(`CONSTANT`, it.constant)
 	addBuiltin(`CREATE`, it.create)
@@ -295,6 +298,24 @@ func (it *Interpreter) cellPlus(string) {
 func (it *Interpreter) cells(string) {
 	count := it.popDataStack()
 	it.dataStack.Push(count * 8)
+}
+
+// char implements the CHAR word. It reads the next word from the input
+// and pushes the ASCII value of its first character onto the stack.
+func (it *Interpreter) char(string) {
+	word := it.nextWord()
+	if word == "" {
+		it.fatalErrorf("CHAR called with no character")
+	}
+
+	value := int64(word[0])
+	it.dataStack.Push(value)
+}
+
+// chars implements the CHARS word.
+func (it *Interpreter) chars(string) {
+	count := it.popDataStack()
+	it.dataStack.Push(count * 1) // 1 byte per character
 }
 
 // clearstack implements the CLEARSTACK word.
