@@ -54,7 +54,9 @@ func (it *Interpreter) setupBuiltins() {
 	addBuiltin(`CREATE`, it.create)
 	addBuiltin(`VARIABLE`, it.variable)
 	addBuiltin(`DROP`, it.drop)
+	addBuiltin(`2DROP`, it.drop2)
 	addBuiltin(`DUP`, it.dup)
+	addBuiltin(`2DUP`, it.dup2)
 	addBuiltin(`EMIT`, it.emit)
 	addBuiltin(`HERE`, it.here)
 	addBuiltin(`OVER`, it.over)
@@ -451,12 +453,28 @@ func (it *Interpreter) drop(string) {
 	it.popDataStack()
 }
 
+// drop2 implements the 2DROP word.
+func (it *Interpreter) drop2(string) {
+	it.popDataStack()
+	it.popDataStack()
+}
+
 // dup implements the DUP word.
 // Duplicate the TOS value and push it onto the stack.
 func (it *Interpreter) dup(string) {
 	value := it.popDataStack()
 	it.dataStack.Push(value)
 	it.dataStack.Push(value)
+}
+
+// dup2 implements the 2DUP word.
+func (it *Interpreter) dup2(string) {
+	v2 := it.popDataStack()
+	v1 := it.popDataStack()
+	it.dataStack.Push(v1)
+	it.dataStack.Push(v2)
+	it.dataStack.Push(v1)
+	it.dataStack.Push(v2)
 }
 
 // emit implements the EMIT word.
