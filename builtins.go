@@ -655,6 +655,20 @@ func (it *Interpreter) do_(word string) {
 			}
 			it.loopStack.Push(loopState)
 			it.inputPtr = loopState.startPtr
+		case "-LOOP":
+			// Same as LOOP, but decrements the loop index by the value on TOS.
+			loopState, ok := it.loopStack.Pop()
+			if !ok {
+				it.fatalErrorf("-LOOP called with empty loop stack")
+			}
+			decrement := it.popDataStack()
+			loopState.index -= decrement
+			if loopState.index <= loopState.limit {
+				// Loop is done, exit.
+				return
+			}
+			it.loopStack.Push(loopState)
+			it.inputPtr = loopState.startPtr
 		case "DO":
 			it.do_(word)
 		default:
