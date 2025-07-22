@@ -2,6 +2,9 @@ package main
 
 import (
 	"fmt"
+	"io"
+	"log"
+	"os"
 	"strconv"
 	"strings"
 )
@@ -201,10 +204,13 @@ func isWhitespace(c byte) bool {
 }
 
 func main() {
-	it := NewInterpreter()
-	it.Run("42 13 over dup drop . . .")
-	fmt.Println(it.stdout.String())
+	data, err := io.ReadAll(os.Stdin)
+	if err != nil {
+		log.Fatalf("Error reading from stdin: %v\n", err)
+	}
 
-	// it.Run("5 3 + .")
-	// fmt.Println(it.stdout.String())
+	it := NewInterpreter()
+	it.Run(string(data))
+
+	fmt.Println(it.stdout.String())
 }
