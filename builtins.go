@@ -40,11 +40,14 @@ func (it *Interpreter) setupBuiltins() {
 	addBuiltin(`@`, it.at)
 	addBuiltin(`.S`, it.dotS)
 	addBuiltin(`ALLOT`, it.allot)
+	addBuiltin(`C!`, it.cExclamation)
+	addBuiltin(`C@`, it.cAt)
 	addBuiltin(`CELL`, it.cell)
 	addBuiltin(`CELL+`, it.cellPlus)
 	addBuiltin(`CELLS`, it.cells)
 	addBuiltin(`[CHAR]`, it.char)
 	addBuiltin(`CHAR`, it.char)
+	addBuiltin(`CHAR+`, it.charPlus)
 	addBuiltin(`CHARS`, it.chars)
 	addBuiltin(`CLEARSTACK`, it.clearstack)
 	addBuiltin(`CONSTANT`, it.constant)
@@ -303,7 +306,7 @@ func (it *Interpreter) cells(string) {
 // char implements the CHAR word. It reads the next word from the input
 // and pushes the ASCII value of its first character onto the stack.
 func (it *Interpreter) char(string) {
-	word := it.nextWord()
+	word := it.nextWordCaseSensitive()
 	if word == "" {
 		it.fatalErrorf("CHAR called with no character")
 	}
@@ -312,10 +315,38 @@ func (it *Interpreter) char(string) {
 	it.dataStack.Push(value)
 }
 
+// charPlus implements the CHAR+ word.
+func (it *Interpreter) charPlus(string) {
+	n := it.popDataStack()
+	it.dataStack.Push(n + 1)
+}
+
 // chars implements the CHARS word.
 func (it *Interpreter) chars(string) {
 	count := it.popDataStack()
 	it.dataStack.Push(count * 1) // 1 byte per character
+}
+
+// cExclamation implements the c! word.
+func (it *Interpreter) cExclamation(string) {
+	addr := it.popDataStack()
+	value := it.popDataStack()
+	if addr < 0 || addr >= int64(it.memptr) {
+		it.fatalErrorf("address %d out of bounds for !", addr)
+	}
+
+	it.memory[addr] = byte(value)
+}
+
+// cAt implements the c@ word.
+func (it *Interpreter) cAt(string) {
+	addr := it.popDataStack()
+	if addr < 0 || addr >= int64(it.memptr) {
+		it.fatalErrorf("address %d out of bounds for @", addr)
+	}
+
+	value := int64(it.memory[addr])
+	it.dataStack.Push(value)
 }
 
 // clearstack implements the CLEARSTACK word.

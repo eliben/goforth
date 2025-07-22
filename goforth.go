@@ -155,9 +155,15 @@ func (it *Interpreter) popReturnStack() int64 {
 	return value
 }
 
-// nextWord retrieves the next word from the input string, skipping any leading
-// whitespace. It returns "" if no more words are available.
+// nextWord retrieves the next word from the input string, skipping
+// any leading whitespace. It returns the word in uppercase.
 func (it *Interpreter) nextWord() string {
+	return strings.ToUpper(it.nextWordCaseSensitive())
+}
+
+// nextWordCaseSensitive retrieves the next word from the input string, skipping
+// any leading whitespace. It returns "" if no more words are available.
+func (it *Interpreter) nextWordCaseSensitive() string {
 	it.skipWhitespace()
 	if it.endOfInput() {
 		return ""
@@ -170,7 +176,7 @@ func (it *Interpreter) nextWord() string {
 
 	word := it.input[start:it.inputPtr]
 	it.skipWhitespace()
-	return strings.ToUpper(word)
+	return word
 }
 
 // rewindWord rewinds the input pointer to the start of the previous word.
