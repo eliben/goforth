@@ -18,7 +18,10 @@ _start:
     ret
 
 .macro NEXT
+	# Load (%rsi) into %rax, and then increment %rsi += 8
     lodsq
-    jmp *($rax)
+	# Jump to the the value of the memory slot indicated by %rax; this is
+	# an indirect jump (indirect threaded code).
+    jmp *(%rax)
 .endm
 
