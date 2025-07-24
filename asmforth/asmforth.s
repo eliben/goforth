@@ -188,6 +188,17 @@ name_\label :
 	push %rax
 	NEXT
 
+	defcode "=",1,,EQU
+	pop %rax
+	pop %rbx
+	cmp %rax, %rbx
+	sete %al
+	movzbq %al, %rax
+	pushq %rax
+	NEXT
+
+	# TODO: will skip many builtins for now, until the whole thing is working.
+
 _start:
 	cld
 	mov %rsp, var_S0
