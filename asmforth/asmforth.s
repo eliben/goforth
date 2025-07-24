@@ -130,6 +130,64 @@ name_\label :
 	pop %rax
 	NEXT
 
+	defcode "2DUP",5,,TWODUP
+	mov (%rsp), %rax
+	mov 8(%rsp), %rbx
+	push %rbx
+	push %rax
+	NEXT
+
+	defcode "2SWAP",5,,TWOSWAP
+	pop %rax
+	pop %rbx
+	pop %rcx
+	pop %rdx
+	push %rbx
+	push %rax
+	push %rdx
+	push %rcx
+	NEXT
+
+	defcode "?DUP",4,,QDUP
+	movq (%rsp), %rax
+	test %rax, %rax
+	jz 1f
+	push %rax
+1:	NEXT
+
+	defcode "1+",2,,INCR
+	incq (%rsp)
+	NEXT
+
+	defcode "1+",2,,DECR
+	decq (%rsp)
+	NEXT
+
+	defcode "8+",2,,INCR8
+	addq $8, (%rsp)
+	NEXT
+
+	defcode "8-",2,,DECR8
+	subq $8, (%rsp)
+	NEXT
+	
+	defcode "+",1,,ADD
+	pop %rax
+	addq %rax, (%rsp)
+	NEXT
+	
+	defcode "-",1,,SUB
+	pop %rax
+	subq %rax, (%rsp)
+	NEXT
+
+	defcode "*",1,,MUL
+	pop %rax
+	pop %rbx
+	imulq %rbx, %rax
+	push %rax
+	NEXT
+
 _start:
 	cld
 	mov %rsp, var_S0
