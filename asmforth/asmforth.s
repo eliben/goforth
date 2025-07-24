@@ -11,13 +11,6 @@
     .text
 	.align 8
 
-_start:
-    # exit(0)
-    mov $0, %rdi
-    mov $EXIT_SYSCALL, %rax
-    syscall
-    ret
-
 	# NEXT is at the end of Forth primitives (written in asm);
 	# it's our "return".
 .macro NEXT
@@ -42,12 +35,119 @@ _start:
 
 	# DOCOL is the interpreter for Forth-implemented words.
 	# It saves the current rsi on the return stack, then sets rsi to rax+8,
-	# pointing at the first data word.
-	# and 
+	# pointing at the first data word. Then NEXT is ready to jump to that
+	# code.
+	# TODO: rax is set up by NEXT, yes?
 DOCOL:
 	PUSHRSP %rsi
 	addq $8, %rax
 	movq %rax, %rsi
 	NEXT
 
+.set F_IMMED, 0x80
+.set F_HIDDEN, 0x28
+.set F_LENMASK, 0x1f
 
+	// Chain of links
+.set link, 0
+
+.macro defword name, namelen, flags=0, label
+	.section .rodata
+	.align 8
+	.globl name_\label
+name_\label :
+	.quad link
+	.set link, name_\label
+	.byte \flags+\namelen
+	.ascii "\name"
+	.align 8
+	.globl \label
+\label :
+	.quad DOCOL
+	# list of word pointers follow
+.endm
+
+.macro defcode name, namelen, flags=0, label
+	.section .rodata
+	.align 8
+	.globl name_\label
+name_\label :
+	.quad link
+	.set link, name_\label
+	.byte \flags+\namelen
+	.ascii "\name"
+	.align 8
+	.globl \label
+\label :
+	# Assembler code follows
+.endm
+
+	#
+	# Builtin FORTH primitives implemented directly in assembly.
+	#
+
+	defcode "DROP",4,,DROP
+	pop %rbx
+	NEXT
+
+	defcode "SWAP",4,,SWAP
+	pop %rax
+	pop %rbx
+	push %rax
+	push %rbx
+	NEXT
+
+	defcode "DUP",3,,DUP
+	mov (%rsp), %rax
+	push %rax
+	NEXT
+
+	defcode "OVER",4,,OVER
+	mov 8(%rsp), %rax
+	push %rax
+	NEXT
+
+	defcode "ROT",3,,ROT
+	pop %rax
+	pop %rbx
+	pop %rcx
+	push %rbx
+	push %rax
+	push %rcx
+	NEXT
+
+	defcode "-ROT",4,,NROT
+	pop %rax
+	pop %rbx
+	pop %rcx
+	push %rax
+	push %rcx
+	push %rbx
+	NEXT
+
+	defcode "2DROP",5,,TWODROP
+	pop %rax
+	pop %rax
+	NEXT
+
+_start:
+	cld
+	mov %rsp, var_S0
+	mov $return_stack_top, %rbp
+	call set_up_data_segment
+
+	# Initialize interpreter and run it
+	mov $cold_start, %rsi
+	NEXT
+
+.section .rodata
+
+	# High-level code without a codeword.
+cold_start:
+	.quad QUIT
+
+    # exit(0)
+    mov $0, %rdi
+    mov $EXIT_SYSCALL, %rax
+    syscall
+    ret
