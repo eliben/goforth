@@ -9,6 +9,7 @@
 
     .globl _start
     .text
+	.align 8
 
 _start:
     # exit(0)
@@ -17,6 +18,8 @@ _start:
     syscall
     ret
 
+	# NEXT is at the end of Forth primitives (written in asm);
+	# it's our "return".
 .macro NEXT
 	# Load (%rsi) into %rax, and then increment %rsi += 8
     lodsq
@@ -24,4 +27,27 @@ _start:
 	# an indirect jump (indirect threaded code).
     jmp *(%rax)
 .endm
+
+	# Push reg onto return stack
+.macro PUSHRSP reg
+	lea -8(%rbp), %rbp
+	movq \reg, %rbp
+.endm
+
+	# Pop top of return stack to reg
+.macro POPRSP reg
+	mov (%rbp), \reg
+	lea 8(%rbp), %rbp
+.endm
+
+	# DOCOL is the interpreter for Forth-implemented words.
+	# It saves the current rsi on the return stack, then sets rsi to rax+8,
+	# pointing at the first data word.
+	# and 
+DOCOL:
+	PUSHRSP %rsi
+	addq $8, %rax
+	movq %rax, %rsi
+	NEXT
+
 
