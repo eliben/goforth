@@ -86,6 +86,17 @@ name_\label :
 	# Builtin FORTH primitives implemented directly in assembly.
 	#
 
+	defcode "EXIT",4,,EXIT
+	POPRSP %rsi
+	NEXT
+
+	defcode "LIT",3,,LIT
+	// %rsi is now pointing to the number (TODO: why??), get it into %rax and
+	// bump %rsi. Then push the value on the stack.
+	lodsq
+	push %rax
+	NEXT
+
 	defcode "DROP",4,,DROP
 	pop %rbx
 	NEXT
