@@ -82,6 +82,22 @@ name_\label :
 	# Assembler code follows
 .endm
 
+.macro defvar name, namelen, flags=0, label, initial=0
+	defcode \name,\namelen,\flags,\label
+	push $var_\name
+	NEXT
+	.data
+	.align 8
+var_\name:
+	.quad \initial
+.endm
+
+.macro defconst name, namelen, flags=0, label, value
+	defcode \name,\namelen,\flags,\label
+	push $\value
+	NEXT
+.endm
+
 	#
 	# Builtin FORTH primitives implemented directly in assembly.
 	#
@@ -209,6 +225,23 @@ name_\label :
 	NEXT
 
 	# TODO: will skip many builtins for now, until the whole thing is working.
+
+	#
+	# Builtin variables
+	#
+	defvar "STATE",5,,STATE
+	defvar "HERE",4,,HERE
+	defvar "LATEST",6,,LATEST,name_SYSCALL0
+	defvar "S0",,2,,SZ
+	defvar "BASE",4,,BASE,10
+
+	#
+	# Builtin constants
+	#
+	defconst "R0",2,,RZ,return_stack_top
+	defconst "DOCOL",5,,__DOCOL,DOCOL
+
+
 
 _start:
 	cld
