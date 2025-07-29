@@ -4,10 +4,10 @@ CCOPT = $(CFLAGS)
 
 all: ctil
 
-ctil: ctil.o
+ctil: ctil.o zmalloc.o
 
 .c.o:
-	$(CC) -c $(CCOPT) $<
+	$(CC) -c $(CCOPT) -I. $<
 
 clean:
 	rm -f *.o ctil

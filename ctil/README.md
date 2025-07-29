@@ -6,7 +6,8 @@ Proposed dictionary entry structure, with this header:
 * Definition
 
 One of the things the flags specify is whether the word is direct (written in
-C) or not (list of other Forth words).
+C) or not (list of other Forth words). The TIL book calls these "primitives"
+and "secondaries".
 
 For direct words: the definition is an 8-byte address of a C function to call.
 
