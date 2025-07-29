@@ -9,15 +9,13 @@ typedef struct {
 } state_t;
 
 state_t* create_state() {
-  state_t* new_state = (state_t*)zmalloc(sizeof(state_t));
-  new_state->pc = 0; // Initialize program counter
-  return new_state;
+  state_t* s = (state_t*)zmalloc(sizeof(state_t));
+  s->pc = 0;
+  return s;
 }
 
 int main() {
-  // Example of a simple C program that prints "Hello, World!"
   printf("Hello, World!\n");
 
-  // Return success status
   return 0;
 }
