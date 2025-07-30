@@ -36,4 +36,7 @@ typedef struct {
 // Create a new state.
 state_t* create_state();
 
+// Show the state and a memory dump.
+void show_state(state_t* s, uintptr_t start, uintptr_t len);
+
 #endif // STATE_H

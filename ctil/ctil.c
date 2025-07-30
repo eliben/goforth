@@ -12,6 +12,8 @@ int main() {
   state_t* state = create_state();
   register_builtins(state);
 
+  show_state(state, 0, state->here);
+
   return 0;
 }
 
