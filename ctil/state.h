@@ -27,7 +27,10 @@ typedef struct {
 // - Link pointer (8 bytes)
 // - Flags (1 byte)
 // - Name length (1 byte)
-// - Name (variable length including terminating 0, up to 255 bytes)
+// - Name
+//   - The name is a null-terminated string, and space is allocated for it
+//     until the next 8-byte boundary. This length is stored in the previous
+//     byte.
 // - Code (variable length)
 
 // Create a new state.
