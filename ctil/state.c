@@ -16,6 +16,7 @@ state_t* create_state() {
 void show_state(state_t* s, uintptr_t start, uintptr_t len) {
     // Print latest, here etc.
     printf("State:\n");
+    printf("  mem: %p\n", (void*)s->mem);
     printf("  latest: 0x%lx\n", (uint64_t)s->latest);
     printf("  here: 0x%lx\n", (uint64_t)s->here);
 

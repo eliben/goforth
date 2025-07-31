@@ -9,7 +9,7 @@ typedef struct {
   // Points to the link slot of the latest defined word.
   int64_t latest;
 
-  // Points to the place where the next word can be defined.
+  // Offset in mem where the next word can be defined.
   int64_t here;
 
   // Current program counter.
