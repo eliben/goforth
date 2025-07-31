@@ -2,6 +2,7 @@
 #define STATE_H
 
 #include <stdint.h>
+#include <stdio.h>
 
 typedef struct {
   char mem[64 * 1024];
@@ -21,6 +22,10 @@ typedef struct {
   // Pointer to the top item on the data stack.
   int64_t stacktop;
 
+  // Input and output streams.
+  FILE* input;
+  FILE* output;
+
 } state_t;
 
 // Dictionary entry:
@@ -33,8 +38,8 @@ typedef struct {
 //     byte.
 // - Code (variable length)
 
-#define F_BUILTIN       0x80
-#define F_IMMEDIATE     0x40
+#define F_BUILTIN 0x80
+#define F_IMMEDIATE 0x40
 
 // Create a new state.
 state_t* create_state();
