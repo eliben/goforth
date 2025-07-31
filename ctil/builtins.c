@@ -2,9 +2,16 @@
 
 #include <assert.h>
 #include <string.h>
+#include <stdio.h>
 
 
 typedef void (*builtin_func_t)(state_t*);
+
+// TODO: reimplement _dot in Forth using lower primitives
+void _dot(state_t* s) {
+    assert(s->stacktop >= 0);
+    printf("%ld \n", s->stack[s->stacktop--]);
+}
 
 void drop(state_t* s) {
     assert(s->stacktop >= 0);
@@ -30,8 +37,8 @@ static void register_builtin(state_t* state, const char* name, char flags, built
     state->here += sizeof(int64_t);
     state->mem[state->here++] = (char)(F_BUILTIN | flags);
 
-    uint8_t namelen = (uint8_t)strlen(name) + 1; // +1 for null terminator
-    // align namelen to 8
+    // Store the length of the name with the 0 terminator, aligned to 8 bytes.
+    uint8_t namelen = (uint8_t)strlen(name) + 1;
     if (namelen % 8 != 0) {
         namelen += 8 - (namelen % 8);
     }
@@ -45,6 +52,7 @@ static void register_builtin(state_t* state, const char* name, char flags, built
 }
  
 void register_builtins(state_t* state) {
+    register_builtin(state, ".", 0, _dot);
     register_builtin(state, "DROP", 0, drop);
     register_builtin(state, "SWAP", 0, swap);
     register_builtin(state, "DUP", 0, dup);

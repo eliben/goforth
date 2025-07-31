@@ -1,10 +1,12 @@
 #include "state.h"
 
 #include <stdio.h>
+#include <string.h>
 #include "zmalloc.h"
 
 state_t* create_state() {
   state_t* s = (state_t*)zmalloc(sizeof(state_t));
+  memset(s->mem, 0, sizeof(s->mem));
   s->pc = 0;
   s->latest = -1;
   s->here = 0;

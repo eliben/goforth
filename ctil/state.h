@@ -12,7 +12,7 @@ typedef struct {
   // Offset in mem where the next word can be defined.
   int64_t here;
 
-  // Current program counter.
+  // Current program counter (offset in mem).
   int64_t pc;
 
   // Forth data stack.
