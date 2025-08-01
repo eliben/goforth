@@ -6,8 +6,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-typedef void (*builtin_func_t)(state_t*);
-
 // TODO: skip compiling part for now. Try to get to executing simple
 // interpreted programs and build tests based on that.
 
@@ -81,29 +79,28 @@ void word(state_t* s) {
 // Expects [addr, len] of string on the stack. Finds a dictionary entry
 // in 's' that matches the string and pushes its address onto the stack.
 // If no match is found, pushes 0.
-void find(state_t* s) {
-  assert(s->stacktop >= 1);
-  int64_t slen = s->stack[s->stacktop--];
-  int64_t saddr = s->stack[s->stacktop--];
+// void find(state_t* s) {
+//   assert(s->stacktop >= 1);
+//   int64_t slen = s->stack[s->stacktop--];
+//   int64_t saddr = s->stack[s->stacktop--];
 
-  // Walking back the linked list of entries starting from latest.
-  int64_t entry_offset = s->latest;
-  while (entry_offset != -1) {
-    int64_t entry_len = (int64_t)s->mem[entry_offset + 9];
-    char* entry_name = &s->mem[entry_offset + 10];
-    if (entry_len == slen && strncmp(entry_name, (char*)saddr, slen) == 0) {
-      // Found a match, push the address of the entry.
-      s->stacktop++;
-      s->stack[s->stacktop] = entry_offset;
-      return;
-    }
-    entry_offset = *(int64_t*)&s->mem[entry_offset];
-  }
+//   // Walking back the linked list of entries starting from latest.
+//   int64_t entry_offset = s->latest;
+//   while (entry_offset != -1) {
+//     char* entry_name = &s->mem[entry_offset + 10];
+//     if (strcmp(entry_name, (char*)saddr) == 0) {
+//       // Found a match, push the address of the entry.
+//       s->stacktop++;
+//       s->stack[s->stacktop] = entry_offset;
+//       return;
+//     }
+//     entry_offset = *(int64_t*)&s->mem[entry_offset];
+//   }
 
-  // No match found, push 0.
-  s->stacktop++;
-  s->stack[s->stacktop] = 0;
-}
+//   // No match found, push 0.
+//   s->stacktop++;
+//   s->stack[s->stacktop] = 0;
+// }
 
 // Create a new dictionary entry for a built-in function. The F_BUILTIN flag
 // is automatically set for all built-ins; the flags parameter can be used
@@ -133,7 +130,7 @@ void register_builtins(state_t* state) {
   register_builtin(state, ".", 0, _dot);
   register_builtin(state, "KEY", 0, key);
   register_builtin(state, "WORD", 0, word);
-  register_builtin(state, "FIND", 0, find);
+//   register_builtin(state, "FIND", 0, find);
   register_builtin(state, "DROP", 0, drop);
   register_builtin(state, "SWAP", 0, swap);
   register_builtin(state, "DUP", 0, dup);

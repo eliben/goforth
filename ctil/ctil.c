@@ -1,12 +1,27 @@
 #include <assert.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdint.h>
+#include <string.h>
 
-#include "state.h"
 #include "builtins.h"
+#include "input.h"
+#include "state.h"
 #include "zmalloc.h"
 
+int64_t find_word_in_dict(state_t* s, const char* word) {
+  int64_t entry_offset = s->latest;
+
+  while (entry_offset != -1) {
+    char* entry_name = &s->mem[entry_offset + 10];
+    if (strcmp(entry_name, word) == 0) {
+      return entry_offset;
+    }
+    entry_offset = *(int64_t*)&s->mem[entry_offset];
+  }
+
+  return -1; // Not found
+}
 
 int main() {
   printf("Hello, World!\n");
@@ -15,10 +30,9 @@ int main() {
 
   show_state(state, 0, state->here);
 
-
   // Main interpreter loop
   // TODO: does not support compilation yet
-  while(1) {
+  while (1) {
     char word[256];
     size_t len = get_word(state->input, word, sizeof(word));
     if (len == 0) {
@@ -26,10 +40,18 @@ int main() {
       break;
     }
 
-    // Find the word in the dictionary.
-    push_word(state, word, len);
+    int64_t entry_offset = find_word_in_dict(state, word);
+    if (entry_offset != -1) {
+      // Execute the found word.
+      char flags = state->mem[entry_offset + 8];
+      if (flags & F_BUILTIN) {
+        int64_t name_len = state->mem[entry_offset + 9];
+        int64_t addr_offset = entry_offset + 2 + name_len;
+        builtin_func_t func = (builtin_func_t)(int64_t)&state->mem[addr_offset];
+        func(state);
+      }
+    }
   }
 
   return 0;
 }
-
