@@ -13,15 +13,6 @@ void _dot(state_t* s) {
   fprintf(s->output, "%ld \n", s->stack[s->stacktop--]);
 }
 
-void key(state_t* s) {
-  int c = fgetc(s->input);
-  if (c == EOF) {
-    exit(0);
-  }
-  s->stacktop++;
-  s->stack[s->stacktop] = c;
-}
-
 void drop(state_t* s) {
   assert(s->stacktop >= 0);
   s->stacktop--;
@@ -40,6 +31,23 @@ void dup(state_t* s) {
   s->stack[s->stacktop] = s->stack[s->stacktop - 1];
 }
 
+void key(state_t* s) {
+  int c = fgetc(s->input);
+  if (c == EOF) {
+    exit(0);
+  }
+  s->stacktop++;
+  s->stack[s->stacktop] = c;
+}
+
+// TODO: jonesforth implements WORD that reads a word into a static buffer
+// and pushes its address and length onto the stack. It also handles "\"
+// comments while it's at it.
+// Continue implementing WORD as a built-in and so on...
+
+// Create a new dictionary entry for a built-in function. The F_BUILTIN flag
+// is automatically set for all built-ins; the flags parameter can be used
+// to specify additional flags.
 static void register_builtin(state_t* state, const char* name, char flags,
                              builtin_func_t func) {
   memcpy(&state->mem[state->here], &state->latest, sizeof(int64_t));
