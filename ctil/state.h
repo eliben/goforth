@@ -25,7 +25,6 @@ typedef struct {
   // Input and output streams.
   FILE* input;
   FILE* output;
-
 } state_t;
 
 // Dictionary entry:
