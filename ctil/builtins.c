@@ -1,6 +1,7 @@
 #include "builtins.h"
 
 #include <assert.h>
+#include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -40,10 +41,33 @@ void key(state_t* s) {
   s->stack[s->stacktop] = c;
 }
 
-// TODO: jonesforth implements WORD that reads a word into a static buffer
-// and pushes its address and length onto the stack. It also handles "\"
-// comments while it's at it.
-// Continue implementing WORD as a built-in and so on...
+// Read a word from the input stream into an internal buffer; push
+// [addr, len] onto the stack.
+void word(state_t* s) {
+  static char buffer[256];
+
+  // Find beginning of the next word, skipping whitespace.
+  char c;
+  while ((c = fgetc(s->input)) != EOF) {
+    if (isspace(c)) {
+      continue;
+    }
+  }
+
+  int writeptr = 0;
+  // Read the word until whitespace or EOF.
+  while (c != EOF && !isspace(c)) {
+    assert(writeptr < sizeof(buffer) - 1);
+    buffer[writeptr++] = c;
+    c = fgetc(s->input);
+  }
+
+  if (writeptr == 0) {
+    exit(0);
+  }
+  s->stack[s->stacktop++] = (int64_t)buffer;
+  s->stack[s->stacktop++] = writeptr;
+}
 
 // Create a new dictionary entry for a built-in function. The F_BUILTIN flag
 // is automatically set for all built-ins; the flags parameter can be used
@@ -72,6 +96,7 @@ static void register_builtin(state_t* state, const char* name, char flags,
 void register_builtins(state_t* state) {
   register_builtin(state, ".", 0, _dot);
   register_builtin(state, "KEY", 0, key);
+  register_builtin(state, "WORD", 0, word);
   register_builtin(state, "DROP", 0, drop);
   register_builtin(state, "SWAP", 0, swap);
   register_builtin(state, "DUP", 0, dup);
