@@ -1,3 +1,5 @@
+# Run 'make DEBUG=1' to build for debugging.
+
 CC = gcc
 
 CFLAGS = -pedantic -Wall -std=c11 

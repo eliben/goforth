@@ -27,7 +27,7 @@ int main() {
   state_t* state = create_state();
   register_builtins(state);
 
-//   show_state(state, 0, state->here);
+  show_state(state, 0, state->here);
 
   // Main interpreter loop
   // TODO: does not support compilation yet
@@ -38,15 +38,22 @@ int main() {
       // EOF reached
       break;
     }
+    printf("-- read word (len=%d): %s\n", (int)len, word);
 
     int64_t entry_offset = find_word_in_dict(state, word);
     if (entry_offset != -1) {
+      printf("Found word at offset %ld\n", entry_offset);
       // Execute the found word.
       char flags = state->mem[entry_offset + 8];
       if (flags & F_BUILTIN) {
         int64_t name_len = state->mem[entry_offset + 9];
-        int64_t addr_offset = entry_offset + 2 + name_len;
-        builtin_func_t func = (builtin_func_t)(int64_t)&state->mem[addr_offset];
+        int64_t addr_offset = entry_offset + 10 + name_len;
+        printf("-- executing builtin at offset %ld\n", addr_offset);
+
+        builtin_func_t func;
+        printf("addr mem offset: %p\n", (void*)&state->mem[addr_offset]);
+        memcpy(&func, &state->mem[addr_offset], sizeof(func));
+        printf("Address of function: %p\n", (void*)func);
         func(state);
       } else {
         assert(0 && "not builtin");
