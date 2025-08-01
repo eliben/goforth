@@ -1,5 +1,3 @@
-# TODO debug/release mode builds
-
 CC = gcc
 CFLAGS = -pedantic -g -Wall -std=c11 
 CCOPT = $(CFLAGS)

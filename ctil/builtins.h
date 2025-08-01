@@ -3,7 +3,7 @@
 
 #include "state.h"
 
-// TODO a function to register built-ins.
+// Register all builtin functions with the state.
 void register_builtins(state_t* state);
 
 #endif // BUILTINS_H
