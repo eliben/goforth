@@ -8,6 +8,9 @@
 
 typedef void (*builtin_func_t)(state_t*);
 
+// TODO: skip compiling part for now. Try to get to executing simple
+// interpreted programs and build tests based on that.
+
 // TODO: reimplement _dot in Forth using lower primitives
 void _dot(state_t* s) {
   assert(s->stacktop >= 0);
@@ -41,6 +44,8 @@ void key(state_t* s) {
   s->stack[s->stacktop] = c;
 }
 
+// TODO: is word being used?
+// TODO: rewrite this using get_word
 // Read a word from the input stream into an internal buffer; push
 // [addr, len] onto the stack.
 // Note: the word is converted to uppercase while reading. If you need

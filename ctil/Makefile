@@ -4,7 +4,7 @@ CCOPT = $(CFLAGS)
 
 all: ctil
 
-ctil: ctil.o zmalloc.o state.o builtins.o
+ctil: input.o ctil.o zmalloc.o state.o builtins.o
 
 .c.o:
 	$(CC) -c $(CCOPT) -I. $<

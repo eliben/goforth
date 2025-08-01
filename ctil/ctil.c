@@ -15,6 +15,21 @@ int main() {
 
   show_state(state, 0, state->here);
 
+
+  // Main interpreter loop
+  // TODO: does not support compilation yet
+  while(1) {
+    char word[256];
+    size_t len = get_word(state->input, word, sizeof(word));
+    if (len == 0) {
+      // EOF reached
+      break;
+    }
+
+    // Find the word in the dictionary.
+    push_word(state, word, len);
+  }
+
   return 0;
 }
 
