@@ -1,13 +1,18 @@
 CC = gcc
-CFLAGS = -pedantic -g -Wall -std=c11 
-CCOPT = $(CFLAGS)
+
+CFLAGS = -pedantic -Wall -std=c11 
+ifeq ($(DEBUG),1)
+	CFLAGS += -O0 -g
+else
+	CFLAGS += -O3
+endif
 
 all: ctil
 
 ctil: input.o ctil.o zmalloc.o state.o builtins.o
 
 .c.o:
-	$(CC) -c $(CCOPT) -I. $<
+	$(CC) -c $(CFLAGS) -I. $<
 
 clean:
 	rm -f *.o ctil

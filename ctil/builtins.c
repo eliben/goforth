@@ -15,6 +15,12 @@ void _dot(state_t* s) {
   fprintf(s->output, "%ld \n", s->stack[s->stacktop--]);
 }
 
+void emit(state_t* s) {
+  assert(s->stacktop >= 0 && s->stack[s->stacktop] <= 255);
+  int64_t c = s->stack[s->stacktop--];
+  fputc((char)c, s->output);
+}
+
 void drop(state_t* s) {
   assert(s->stacktop >= 0);
   s->stacktop--;
@@ -128,9 +134,10 @@ static void register_builtin(state_t* state, const char* name, char flags,
 
 void register_builtins(state_t* state) {
   register_builtin(state, ".", 0, _dot);
+  register_builtin(state, "EMIT", 0, emit);
   register_builtin(state, "KEY", 0, key);
   register_builtin(state, "WORD", 0, word);
-//   register_builtin(state, "FIND", 0, find);
+  //   register_builtin(state, "FIND", 0, find);
   register_builtin(state, "DROP", 0, drop);
   register_builtin(state, "SWAP", 0, swap);
   register_builtin(state, "DUP", 0, dup);
