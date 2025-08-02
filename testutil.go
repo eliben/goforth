@@ -1,9 +1,27 @@
 package main
 
 import (
+	"fmt"
+	"os"
 	"strings"
 	"testing"
 )
+
+const delim = "\\ ---- OUT ----"
+
+func getTestFileData(filepath string) (string, string, error) {
+	content, err := os.ReadFile(filepath)
+	if err != nil {
+		return "", "", err
+	}
+	parts := strings.SplitN(string(content), delim, 2)
+	if len(parts) != 2 {
+		return "", "", fmt.Errorf("test file must contain '%s' delimiter", delim)
+	}
+	code := strings.TrimSpace(parts[0])
+	expected := strings.TrimSpace(parts[1])
+	return code, expected, nil
+}
 
 func compareExpected(t *testing.T, expected, actual string) {
 	if expected != actual {
