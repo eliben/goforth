@@ -37,6 +37,9 @@ typedef struct {
 //     byte.
 // - Code (variable length)
 
+
+// TODO instead of F_BUILTIN, we should probably have an "interpreter" for
+// forth words like DOCOL, it should use pc to find which word to execute.
 #define F_BUILTIN 0x80
 #define F_IMMEDIATE 0x40
 

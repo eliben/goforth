@@ -12,7 +12,7 @@
 // TODO: reimplement _dot in Forth using lower primitives
 void _dot(state_t* s) {
   assert(s->stacktop >= 0);
-  fprintf(s->output, "%ld \n", s->stack[s->stacktop--]);
+  fprintf(s->output, "%ld ", s->stack[s->stacktop--]);
 }
 
 void emit(state_t* s) {
