@@ -34,6 +34,7 @@ func ensureCtilBinaryExists(t *testing.T) {
 // slice of supported tests
 var supportedTests = []string{
 	"stack1.4th",
+	"stack2.4th",
 }
 
 func TestCtilForthFiles(t *testing.T) {

@@ -40,6 +40,8 @@ typedef struct {
 
 // TODO instead of F_BUILTIN, we should probably have an "interpreter" for
 // forth words like DOCOL, it should use pc to find which word to execute.
+// The whole thing should be an interpreter, instead of relying on the C
+// call stack. Calls into C should only happen for built-ins.
 #define F_BUILTIN 0x80
 #define F_IMMEDIATE 0x40
 

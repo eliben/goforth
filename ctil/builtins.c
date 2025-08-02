@@ -15,6 +15,14 @@ void _dot(state_t* s) {
   fprintf(s->output, "%ld ", s->stack[s->stacktop--]);
 }
 
+void _dotS(state_t* s) {
+  int64_t len = s->stacktop + 1;
+  fprintf(s->output, "<%ld> ", len);
+  for (int64_t i = 0; i <= s->stacktop; i++) {
+    fprintf(s->output, "%ld ", s->stack[i]);
+  }
+}
+
 void emit(state_t* s) {
   assert(s->stacktop >= 0 && s->stack[s->stacktop] <= 255);
   int64_t c = s->stack[s->stacktop--];
@@ -43,6 +51,23 @@ void dup(state_t* s) {
   assert(s->stacktop >= 0);
   s->stacktop++;
   s->stack[s->stacktop] = s->stack[s->stacktop - 1];
+}
+
+void dup2(state_t* s) {
+  assert(s->stacktop >= 1);
+  // [v2 v1 -- v2 v1 v2 v1]
+  int64_t v1 = s->stack[s->stacktop];
+  int64_t v2 = s->stack[s->stacktop - 1];
+
+  s->stacktop++;
+  s->stack[s->stacktop] = v2;
+  s->stacktop++;
+  s->stack[s->stacktop] = v1;
+}
+
+void drop2(state_t* s) {
+  assert(s->stacktop >= 1);
+  s->stacktop -= 2;
 }
 
 void key(state_t* s) {
@@ -140,6 +165,7 @@ static void register_builtin(state_t* state, const char* name, char flags,
 
 void register_builtins(state_t* state) {
   register_builtin(state, ".", 0, _dot);
+  register_builtin(state, ".S", 0, _dotS);
   register_builtin(state, "EMIT", 0, emit);
   register_builtin(state, "KEY", 0, key);
   register_builtin(state, "WORD", 0, word);
@@ -148,4 +174,6 @@ void register_builtins(state_t* state) {
   register_builtin(state, "SWAP", 0, swap);
   register_builtin(state, "DUP", 0, dup);
   register_builtin(state, "OVER", 0, over);
+  register_builtin(state, "2DUP", 0, dup2);
+  register_builtin(state, "2DROP", 0, drop2);
 }
