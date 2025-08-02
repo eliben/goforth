@@ -45,8 +45,6 @@ int main() {
   state_t* state = create_state();
   register_builtins(state);
 
-  show_state(state, 0, state->here);
-
   // Main interpreter loop
   // TODO: does not support compilation yet
   while (1) {
@@ -69,7 +67,9 @@ int main() {
         state->stacktop++;
         state->stack[state->stacktop] = num;
       } else {
+        // TODO: have a proper die
         fprintf(stderr, "Unknown word: %s\n", word);
+        exit(1);
       }
     }
   }

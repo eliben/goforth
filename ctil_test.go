@@ -67,9 +67,9 @@ func TestCtilForthFiles(t *testing.T) {
 				t.Fatalf("Failed to write code to stdin: %v", err)
 			}
 
-			b, err := cmd.Output()
+			b, err := cmd.CombinedOutput()
 			if err != nil {
-				t.Fatalf("Failed to run ctil binary: %v", err)
+				t.Fatalf("Failed to run ctil binary: %v\n%v", err, string(b))
 			}
 
 			compareExpected(t, expected, string(b))
