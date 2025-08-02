@@ -79,6 +79,72 @@ void key(state_t* s) {
   s->stack[s->stacktop] = c;
 }
 
+void plus(state_t* s) {
+  assert(s->stacktop >= 1);
+  int64_t a = s->stack[s->stacktop--];
+  int64_t b = s->stack[s->stacktop--];
+  s->stacktop++;
+  s->stack[s->stacktop] = b + a;
+}
+
+void minus(state_t* s) {
+  assert(s->stacktop >= 1);
+  int64_t a = s->stack[s->stacktop--];
+  int64_t b = s->stack[s->stacktop--];
+  s->stacktop++;
+  s->stack[s->stacktop] = b - a;
+}
+
+void mod(state_t* s) {
+  assert(s->stacktop >= 1);
+  int64_t a = s->stack[s->stacktop--];
+  int64_t b = s->stack[s->stacktop--];
+  assert(b != 0);
+  s->stacktop++;
+  s->stack[s->stacktop] = b % a;
+}
+
+void _div(state_t* s) {
+  assert(s->stacktop >= 1);
+  int64_t a = s->stack[s->stacktop--];
+  int64_t b = s->stack[s->stacktop--];
+  assert(b != 0);
+  s->stacktop++;
+  s->stack[s->stacktop] = b / a;
+}
+
+void _equals(state_t* s) {
+  assert(s->stacktop >= 1);
+  int64_t a = s->stack[s->stacktop--];
+  int64_t b = s->stack[s->stacktop--];
+  s->stacktop++;
+  s->stack[s->stacktop] = (a == b) ? -1 : 0;
+}
+
+void _notequals(state_t* s) {
+  assert(s->stacktop >= 1);
+  int64_t a = s->stack[s->stacktop--];
+  int64_t b = s->stack[s->stacktop--];
+  s->stacktop++;
+  s->stack[s->stacktop] = (a != b) ? -1 : 0;
+}
+
+void _lt(state_t* s) {
+  assert(s->stacktop >= 1);
+  int64_t a = s->stack[s->stacktop--];
+  int64_t b = s->stack[s->stacktop--];
+  s->stacktop++;
+  s->stack[s->stacktop] = (a < b) ? -1 : 0;
+}
+
+void _gt(state_t* s) {
+  assert(s->stacktop >= 1);
+  int64_t a = s->stack[s->stacktop--];
+  int64_t b = s->stack[s->stacktop--];
+  s->stacktop++;
+  s->stack[s->stacktop] = (a > b) ? -1 : 0;
+}
+
 // TODO: is word being used?
 // TODO: rewrite this using get_word
 // Read a word from the input stream into an internal buffer; push
@@ -176,4 +242,12 @@ void register_builtins(state_t* state) {
   register_builtin(state, "OVER", 0, over);
   register_builtin(state, "2DUP", 0, dup2);
   register_builtin(state, "2DROP", 0, drop2);
+  register_builtin(state, "+", 0, plus);
+  register_builtin(state, "-", 0, minus);
+  register_builtin(state, "/", 0, _div);
+  register_builtin(state, "MOD", 0, mod);
+  register_builtin(state, "=", 0, _equals);
+  register_builtin(state, "<>", 0, _notequals);
+  register_builtin(state, "<", 0, _lt);
+  register_builtin(state, ">", 0, _gt);
 }
