@@ -14,7 +14,7 @@ typedef struct {
   int64_t here;
 
   // Current program counter (offset in mem).
-  int64_t pc;
+//   int64_t pc;
 
   // Forth data stack.
   int64_t stack[64 * 1024];
