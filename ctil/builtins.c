@@ -9,6 +9,14 @@
 // TODO: skip compiling part for now. Try to get to executing simple
 // interpreted programs and build tests based on that.
 
+// Skip the rest of the line until newline.
+// TODO: reimplement this in Forth using lower-level primitives.
+void backslash(state_t* s) {
+  int c;
+  while ((c = fgetc(s->input)) != EOF && c != '\n') {
+  }
+}
+
 // TODO: reimplement _dot in Forth using lower primitives
 void _dot(state_t* s) {
   assert(s->stacktop >= 0);
@@ -118,7 +126,7 @@ void _equals(state_t* s) {
   int64_t a = s->stack[s->stacktop--];
   int64_t b = s->stack[s->stacktop--];
   s->stacktop++;
-  s->stack[s->stacktop] = (a == b) ? -1 : 0;
+  s->stack[s->stacktop] = (b == a) ? -1 : 0;
 }
 
 void _notequals(state_t* s) {
@@ -126,7 +134,7 @@ void _notequals(state_t* s) {
   int64_t a = s->stack[s->stacktop--];
   int64_t b = s->stack[s->stacktop--];
   s->stacktop++;
-  s->stack[s->stacktop] = (a != b) ? -1 : 0;
+  s->stack[s->stacktop] = (b != a) ? -1 : 0;
 }
 
 void _lt(state_t* s) {
@@ -134,7 +142,7 @@ void _lt(state_t* s) {
   int64_t a = s->stack[s->stacktop--];
   int64_t b = s->stack[s->stacktop--];
   s->stacktop++;
-  s->stack[s->stacktop] = (a < b) ? -1 : 0;
+  s->stack[s->stacktop] = (b < a) ? -1 : 0;
 }
 
 void _gt(state_t* s) {
@@ -142,7 +150,7 @@ void _gt(state_t* s) {
   int64_t a = s->stack[s->stacktop--];
   int64_t b = s->stack[s->stacktop--];
   s->stacktop++;
-  s->stack[s->stacktop] = (a > b) ? -1 : 0;
+  s->stack[s->stacktop] = (b > a) ? -1 : 0;
 }
 
 // TODO: is word being used?
@@ -230,6 +238,7 @@ static void register_builtin(state_t* state, const char* name, char flags,
 }
 
 void register_builtins(state_t* state) {
+  register_builtin(state, "\\", 0, backslash);
   register_builtin(state, ".", 0, _dot);
   register_builtin(state, ".S", 0, _dotS);
   register_builtin(state, "EMIT", 0, emit);
