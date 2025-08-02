@@ -24,6 +24,8 @@ func getTestFileData(filepath string) (string, string, error) {
 }
 
 func compareExpected(t *testing.T, expected, actual string) {
+	expected = strings.TrimSpace(expected)
+	actual = strings.TrimSpace(actual)
 	if expected != actual {
 		t.Errorf("Output mismatch.\nExpected:\n%s\nActual:\n%s", expected, actual)
 

@@ -57,6 +57,8 @@ func TestCtilForthFiles(t *testing.T) {
 				t.Fatalf("Failed to read file: %v", err)
 			}
 
+			// t.Logf("Sending code to ctil binary:\n===\n%s\n===", code)
+
 			cmd := exec.Command(filepath.Join(ctilDir, ctilBinaryName))
 			cmdStdin, err := cmd.StdinPipe()
 			if err != nil {
@@ -66,11 +68,16 @@ func TestCtilForthFiles(t *testing.T) {
 			if _, err := io.WriteString(cmdStdin, code); err != nil {
 				t.Fatalf("Failed to write code to stdin: %v", err)
 			}
+			if err := cmdStdin.Close(); err != nil {
+				t.Fatalf("Failed to close stdin pipe: %v", err)
+			}
 
 			b, err := cmd.CombinedOutput()
 			if err != nil {
 				t.Fatalf("Failed to run ctil binary: %v\n%v", err, string(b))
 			}
+
+			// t.Logf("Ctil binary output:\n===\n%s\n===", string(b))
 
 			compareExpected(t, expected, string(b))
 		})

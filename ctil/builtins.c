@@ -33,6 +33,12 @@ void swap(state_t* s) {
   s->stack[s->stacktop - 1] = temp;
 }
 
+void over(state_t* s) {
+  assert(s->stacktop >= 1);
+  s->stacktop++;
+  s->stack[s->stacktop] = s->stack[s->stacktop - 2];
+}
+
 void dup(state_t* s) {
   assert(s->stacktop >= 0);
   s->stacktop++;
@@ -141,4 +147,5 @@ void register_builtins(state_t* state) {
   register_builtin(state, "DROP", 0, drop);
   register_builtin(state, "SWAP", 0, swap);
   register_builtin(state, "DUP", 0, dup);
+  register_builtin(state, "OVER", 0, over);
 }
