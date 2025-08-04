@@ -6,7 +6,6 @@
 
 #include <stdlib.h>
 
-void die(const char* str);
 void* zmalloc(size_t size);
 void zfree(void* ptr);
 

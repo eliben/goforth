@@ -5,6 +5,7 @@
 #include <string.h>
 
 #include "builtins.h"
+#include "die.h"
 #include "input.h"
 #include "state.h"
 #include "zmalloc.h"
@@ -57,7 +58,7 @@ int main() {
 
     int64_t entry_offset = find_word_in_dict(state, word);
     if (entry_offset != -1) {
-        execute_word(state, entry_offset);
+      execute_word(state, entry_offset);
     } else {
       // Try to parse the word as a number.
       char* endptr;
@@ -67,9 +68,7 @@ int main() {
         state->stacktop++;
         state->stack[state->stacktop] = num;
       } else {
-        // TODO: have a proper die
-        fprintf(stderr, "Unknown word: %s\n", word);
-        exit(1);
+        die("Unknown word: %s\n", word);
       }
     }
   }

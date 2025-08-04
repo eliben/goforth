@@ -12,7 +12,7 @@ endif
 
 all: ctil
 
-ctil: input.o ctil.o zmalloc.o state.o builtins.o
+ctil: die.o zmalloc.o input.o state.o builtins.o ctil.o
 
 .c.o:
 	$(CC) -c $(CFLAGS) -I. $<
