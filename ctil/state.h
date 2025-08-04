@@ -13,9 +13,6 @@ typedef struct {
   // Offset in mem where the next word can be defined.
   int64_t here;
 
-  // Current program counter (offset in mem).
-  int64_t pc;
-
   // Forth data stack, and a pointer to its top item.
   int64_t stack[64 * 1024];
   int64_t stacktop;

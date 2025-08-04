@@ -9,11 +9,6 @@
 // TODO: skip compiling part for now. Try to get to executing simple
 // interpreted programs and build tests based on that.
 
-void _exit(state_t* s) {
-  assert(s->retstacktop >= 0);
-  s->pc = s->retstack[s->retstacktop--];
-}
-
 // Skip the rest of the line until newline.
 // TODO: reimplement this in Forth using lower-level primitives.
 void backslash(state_t* s) {
@@ -243,7 +238,6 @@ static void register_builtin(state_t* state, const char* name, char flags,
 }
 
 void register_builtins(state_t* state) {
-  register_builtin(state, "_EXIT", 0, _exit);
   register_builtin(state, "\\", 0, backslash);
   register_builtin(state, ".", 0, _dot);
   register_builtin(state, ".S", 0, _dotS);
@@ -287,8 +281,7 @@ void register_builtins(state_t* state) {
   memcpy(&state->mem[state->here], &plus_offset, sizeof(int64_t));
   state->here += sizeof(int64_t);
 
-  int64_t exit_offset = find_word_in_dict(state, "_EXIT");
-  assert(exit_offset != -1);
-  memcpy(&state->mem[state->here], &exit_offset, sizeof(int64_t));
+  int64_t end_marker = -1;
+  memcpy(&state->mem[state->here], &end_marker, sizeof(int64_t));
   state->here += sizeof(int64_t);
 }

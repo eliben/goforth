@@ -1,14 +1,13 @@
 #include "state.h"
 
+#include "zmalloc.h"
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
-#include "zmalloc.h"
 
 state_t* create_state() {
   state_t* s = (state_t*)zmalloc(sizeof(state_t));
   memset(s->mem, 0, sizeof(s->mem));
-  s->pc = 0;
   s->latest = -1;
   s->here = 0;
   s->stacktop = -1;
@@ -54,9 +53,10 @@ int64_t find_word_in_dict(state_t* s, const char* word) {
 }
 
 void execute_word(state_t* s, int64_t entry_offset) {
-  // Execute the found word.
   char flags = s->mem[entry_offset + 8];
+
   if (flags & F_BUILTIN) {
+    // Call the builtin function.
     int64_t name_len = s->mem[entry_offset + 9];
     int64_t addr_offset = entry_offset + 10 + name_len;
 
@@ -64,6 +64,19 @@ void execute_word(state_t* s, int64_t entry_offset) {
     memcpy(&func, &s->mem[addr_offset], sizeof(func));
     func(s);
   } else {
-    assert(0 && "not builtin");
+    int64_t name_len = s->mem[entry_offset + 9];
+    int64_t addr_offset = entry_offset + 10 + name_len;
+    while (1) {
+      // Read the next word from the dictionary.
+      int64_t next_word_offset = *(int64_t*)&s->mem[addr_offset];
+      if (next_word_offset == -1) {
+        // End of the word.
+        break;
+      }
+
+      // Execute the next word.
+      execute_word(s, next_word_offset);
+      addr_offset += sizeof(int64_t);
+    }
   }
 }
