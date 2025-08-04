@@ -284,4 +284,27 @@ void register_builtins(state_t* state) {
   int64_t end_marker = -1;
   memcpy(&state->mem[state->here], &end_marker, sizeof(int64_t));
   state->here += sizeof(int64_t);
+
+  // Another non-builtin
+  //    : quad double double ;
+  memcpy(&state->mem[state->here], &state->latest, sizeof(int64_t));
+  state->latest = state->here;
+  state->here += sizeof(int64_t);
+  state->mem[state->here++] = 0;
+  name_len = 8;
+  state->mem[state->here++] = name_len;
+  strcpy(&state->mem[state->here], "QUAD");
+  state->here += name_len;
+
+  dup_offset = find_word_in_dict(state, "DOUBLE");
+  assert(dup_offset != -1);
+  memcpy(&state->mem[state->here], &dup_offset, sizeof(int64_t));
+  state->here += sizeof(int64_t);
+
+  memcpy(&state->mem[state->here], &dup_offset, sizeof(int64_t));
+  state->here += sizeof(int64_t);
+
+  end_marker = -1;
+  memcpy(&state->mem[state->here], &end_marker, sizeof(int64_t));
+  state->here += sizeof(int64_t);
 }
