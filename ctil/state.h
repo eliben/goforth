@@ -14,18 +14,22 @@ typedef struct {
   int64_t here;
 
   // Current program counter (offset in mem).
-//   int64_t pc;
+  int64_t pc;
 
-  // Forth data stack.
+  // Forth data stack, and a pointer to its top item.
   int64_t stack[64 * 1024];
-
-  // Pointer to the top item on the data stack.
   int64_t stacktop;
+
+  // Forth return stack, and a pointer to its top item.
+  int64_t retstack[64 * 1024];
+  int64_t retstacktop;
 
   // Input and output streams.
   FILE* input;
   FILE* output;
 } state_t;
+
+typedef void (*builtin_func_t)(state_t*);
 
 // Dictionary entry:
 // - Link offset (8 bytes)
@@ -36,7 +40,6 @@ typedef struct {
 //     until the next 8-byte boundary. This length is stored in the previous
 //     byte.
 // - Code (variable length)
-
 
 // TODO instead of F_BUILTIN, we should probably have an "interpreter" for
 // forth words like DOCOL, it should use pc to find which word to execute.
@@ -50,5 +53,12 @@ state_t* create_state();
 
 // Show the state and a memory dump.
 void show_state(state_t* s, uintptr_t start, uintptr_t len);
+
+// Find a word in the dictionary by its name. Returns the offset of the
+// dictionary entry in mem if found, or -1 if not found.
+int64_t find_word_in_dict(state_t* s, const char* word);
+
+// Execute the word found at the given memory offset.
+void execute_word(state_t* s, int64_t entry_offset);
 
 #endif // STATE_H

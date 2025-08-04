@@ -10,37 +10,6 @@
 #include "state.h"
 #include "zmalloc.h"
 
-// Find a word in the dictionary by its name. Returns the offset of the
-// dictionary entry in mem if found, or -1 if not found.
-int64_t find_word_in_dict(state_t* s, const char* word) {
-  int64_t entry_offset = s->latest;
-
-  while (entry_offset != -1) {
-    char* entry_name = &s->mem[entry_offset + 10];
-    if (strcmp(entry_name, word) == 0) {
-      return entry_offset;
-    }
-    entry_offset = *(int64_t*)&s->mem[entry_offset];
-  }
-
-  return -1;
-}
-
-// Execute the word found at the given memory offset.
-void execute_word(state_t* s, int64_t entry_offset) {
-  // Execute the found word.
-  char flags = s->mem[entry_offset + 8];
-  if (flags & F_BUILTIN) {
-    int64_t name_len = s->mem[entry_offset + 9];
-    int64_t addr_offset = entry_offset + 10 + name_len;
-
-    builtin_func_t func;
-    memcpy(&func, &s->mem[addr_offset], sizeof(func));
-    func(s);
-  } else {
-    assert(0 && "not builtin");
-  }
-}
 
 int main() {
   state_t* state = create_state();
