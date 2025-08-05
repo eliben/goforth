@@ -121,16 +121,13 @@ void interpret(state_t* s) {
 
     int64_t entry_offset = find_word_in_dict(s, word);
     if (entry_offset != -1) {
-      if (entry_is_immediate(s, entry_offset)) {
-        // Immediate word, execute it directly.
+      if (entry_is_immediate(s, entry_offset) || !s->compiling) {
+        // Execute directly.
         execute_word(s, entry_offset);
-      } else if (s->compiling) {
+      } else {
         // Store the entry offset at the 'here' offset in memory.
         memcpy(&s->mem[s->here], &entry_offset, sizeof(int64_t));
         s->here += sizeof(int64_t);
-      } else {
-        // TODO: combine conditions?
-        execute_word(s, entry_offset);
       }
     } else {
       // Try to parse the word as a number.
@@ -141,8 +138,8 @@ void interpret(state_t* s) {
       }
       // Successfully parsed a number.
       if (s->compiling) {
-        // Store the entry for LIT following the number itself in memory.
-        int64_t lit_offset = find_word_in_dict(s, "LIT");
+        // Store the entry for LITNUMBER following the number itself in memory.
+        int64_t lit_offset = find_word_in_dict(s, "LITNUMBER");
         assert(lit_offset != -1);
         memcpy(&s->mem[s->here], &lit_offset, sizeof(int64_t));
         s->here += sizeof(int64_t);
