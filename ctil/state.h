@@ -38,10 +38,6 @@ typedef void (*builtin_func_t)(state_t*);
 //     byte.
 // - Code (variable length)
 
-// TODO instead of F_BUILTIN, we should probably have an "interpreter" for
-// forth words like DOCOL, it should use pc to find which word to execute.
-// The whole thing should be an interpreter, instead of relying on the C
-// call stack. Calls into C should only happen for built-ins.
 #define F_BUILTIN 0x80
 #define F_IMMEDIATE 0x40
 
@@ -50,6 +46,11 @@ state_t* create_state();
 
 // Show the state and a memory dump.
 void show_state(state_t* s, uintptr_t start, uintptr_t len);
+
+void interpret(state_t* s);
+
+
+// TODO: if it's all in state, I don't need to expose these
 
 // Find a word in the dictionary by its name. Returns the offset of the
 // dictionary entry in mem if found, or -1 if not found.
