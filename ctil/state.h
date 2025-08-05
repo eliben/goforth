@@ -17,6 +17,8 @@ typedef struct {
   int64_t stack[64 * 1024];
   int64_t stacktop;
 
+  int64_t pc;
+
   // Forth return stack, and a pointer to its top item.
   int64_t retstack[64 * 1024];
   int64_t retstacktop;

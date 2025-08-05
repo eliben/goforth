@@ -14,6 +14,7 @@ state_t* create_state() {
   s->latest = -1;
   s->here = 0;
   s->stacktop = -1;
+  s->pc = 0;
   s->retstacktop = -1;
   s->input = stdin;
   s->output = stdout;
@@ -67,41 +68,39 @@ builtin_func_t entry_get_builtin_func(state_t* s, int64_t entry_offset) {
   return func;
 }
 
-// TODO idea for real pc-based execution
-//
-// When called, assumes it's a non-builtin (top-level builtins can be
-// special-cased).
-//
-// * pc starts pointing at the first word of the definition
-// * while not "done"
-//   * if word at pc is builtin, call it, advance pc to next word
-//   * otherwise:
-//      - save offset of _next_ word on the return stack
-//      - set pc to the first word of the definition
-//
-// The last word of a definition is a special "exit" word that pops from
-// the return stack to pc.
+int64_t entry_get_code_offset(state_t* s, int64_t entry_offset) {
+  int64_t name_len = s->mem[entry_offset + 9];
+  return entry_offset + 10 + name_len;
+}
 
 void execute_word(state_t* s, int64_t entry_offset) {
-  //   char flags = s->mem[entry_offset + 8];
-
   if (entry_is_builtin(s, entry_offset)) {
     builtin_func_t func = entry_get_builtin_func(s, entry_offset);
     func(s);
-  } else {
-    int64_t name_len = s->mem[entry_offset + 9];
-    int64_t addr_offset = entry_offset + 10 + name_len;
-    while (1) {
-      // Read the next word from the dictionary.
-      int64_t next_word_offset = *(int64_t*)&s->mem[addr_offset];
-      if (next_word_offset == -1) {
-        // End of the word.
+    return;
+  }
+
+  // The entry is not a builtin; set pc to the first word of its code and
+  // start executing.
+  s->pc = entry_get_code_offset(s, entry_offset);
+  while (1) {
+    int64_t subentry = *(int64_t*)&s->mem[s->pc];
+    if (subentry == -1) {
+      // TODO: if this function can be called recursively, we may need
+      // to adjust the check for "same level of retstack" here?
+      if (s->retstacktop < 0) {
         break;
       }
-
-      // Execute the next word.
-      execute_word(s, next_word_offset);
-      addr_offset += sizeof(int64_t);
+      s->pc = s->retstack[s->retstacktop--];
+    } else if (entry_is_builtin(s, subentry)) {
+      // It's a builtin, execute it.
+      builtin_func_t func = entry_get_builtin_func(s, subentry);
+      func(s);
+      s->pc += sizeof(int64_t);
+    } else {
+      s->retstacktop++;
+      s->retstack[s->retstacktop] = s->pc + sizeof(int64_t);
+      s->pc = entry_get_code_offset(s, subentry);
     }
   }
 }
