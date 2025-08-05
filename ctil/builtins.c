@@ -9,6 +9,15 @@
 #include "die.h"
 #include "input.h"
 
+// Align a name length to 8 bytes, including the null terminator.
+static uint8_t align_name_len(uint8_t len) {
+  len++;
+  if (len % 8 != 0) {
+    len += 8 - (len % 8);
+  }
+  return len;
+}
+
 // TODO: once more machinery is in place, consider rewriting some of these
 // in Forth directly.
 
@@ -252,11 +261,7 @@ void createdef(state_t* s) {
   s->here += sizeof(int64_t);
   s->mem[s->here++] = 0;
 
-  // Name len aligned to 8 bytes, with a null terminator
-  uint8_t name_len = (uint8_t)len + 1;
-  if (name_len % 8 != 0) {
-    name_len += 8 - (name_len % 8);
-  }
+  uint8_t name_len = align_name_len((uint8_t)len);
   s->mem[s->here++] = name_len;
   strncpy(&s->mem[s->here], (char*)addr, len);
   s->mem[s->here + len] = '\0';
@@ -289,13 +294,10 @@ void colon(state_t* s) {
   s->here += sizeof(int64_t);
   s->mem[s->here++] = 0;
 
-  len++;
-  if (len % 8 != 0) {
-    len += 8 - (len % 8);
-  }
-  s->mem[s->here++] = (uint8_t)len;
+  uint8_t name_len = align_name_len((uint8_t)len);
+  s->mem[s->here++] = name_len;
   strcpy(&s->mem[s->here], buf);
-  s->here += len;
+  s->here += name_len;
   s->compiling = 1;
 }
 
@@ -343,11 +345,7 @@ static void register_builtin(state_t* state, const char* name, char flags,
   state->here += sizeof(int64_t);
   state->mem[state->here++] = (char)(F_BUILTIN | flags);
 
-  // Store the length of the name with the 0 terminator, aligned to 8 bytes.
-  uint8_t namelen = (uint8_t)strlen(name) + 1;
-  if (namelen % 8 != 0) {
-    namelen += 8 - (namelen % 8);
-  }
+  uint8_t namelen = align_name_len((uint8_t)strlen(name));
   state->mem[state->here++] = namelen;
   strcpy(&state->mem[state->here], name);
   state->here += namelen;
