@@ -17,6 +17,15 @@ void backslash(state_t* s) {
   }
 }
 
+void paren(state_t* s) {
+  int c;
+  while ((c = fgetc(s->input)) != EOF && c != ')') {
+  }
+  if (c == EOF) {
+    die("Unmatched parenthesis in input");
+  }
+}
+
 // TODO: reimplement _dot in Forth using lower primitives
 void _dot(state_t* s) {
   assert(s->stacktop >= 0);
@@ -317,6 +326,7 @@ static void register_builtin(state_t* state, const char* name, char flags,
 
 void register_builtins(state_t* state) {
   register_builtin(state, "\\", 0, backslash);
+  register_builtin(state, "(", 0, paren);
   register_builtin(state, ".", 0, _dot);
   register_builtin(state, ".S", 0, _dotS);
   register_builtin(state, "EMIT", 0, emit);
