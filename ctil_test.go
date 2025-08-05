@@ -36,6 +36,7 @@ var supportedTests = []string{
 	"arith1.4th",
 	"stack1.4th",
 	"stack2.4th",
+	"word-def1.4th",
 }
 
 func TestCtilForthFiles(t *testing.T) {

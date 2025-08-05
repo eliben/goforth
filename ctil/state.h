@@ -19,6 +19,10 @@ typedef struct {
 
   int64_t pc;
 
+  // Compiling mode: if non-zero, the interpreter is "compiling" (defining
+  // a new word) rather than executing it directly.
+  int compiling;
+
   // Forth return stack, and a pointer to its top item.
   int64_t retstack[64 * 1024];
   int64_t retstacktop;

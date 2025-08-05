@@ -6,8 +6,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-// TODO: skip compiling part for now. Try to get to executing simple
-// interpreted programs and build tests based on that.
+#include "die.h"
+#include "input.h"
 
 // Skip the rest of the line until newline.
 // TODO: reimplement this in Forth using lower-level primitives.
@@ -112,6 +112,14 @@ void mod(state_t* s) {
   s->stack[s->stacktop] = b % a;
 }
 
+void mul(state_t* s) {
+  assert(s->stacktop >= 1);
+  int64_t a = s->stack[s->stacktop--];
+  int64_t b = s->stack[s->stacktop--];
+  s->stacktop++;
+  s->stack[s->stacktop] = b * a;
+}
+
 void _div(state_t* s) {
   assert(s->stacktop >= 1);
   int64_t a = s->stack[s->stacktop--];
@@ -153,7 +161,6 @@ void _gt(state_t* s) {
   s->stack[s->stacktop] = (b > a) ? -1 : 0;
 }
 
-// TODO: is word being used?
 // TODO: rewrite this using get_word
 // Read a word from the input stream into an internal buffer; push
 // [addr, len] onto the stack.
@@ -185,6 +192,69 @@ void word(state_t* s) {
   s->stack[s->stacktop] = (int64_t)buffer;
   s->stacktop++;
   s->stack[s->stacktop] = writeptr;
+}
+
+// In JonesForth, this is called CREATE, but it's not a standard Forthe CREATE,
+// so we give it a special name.
+void createdef(state_t* s) {
+  assert(s->stacktop >= 1);
+  int64_t len = s->stack[s->stacktop--];
+  int64_t addr = s->stack[s->stacktop--];
+
+  // Build a new dictionary entry.
+  memcpy(&s->mem[s->here], &s->latest, sizeof(int64_t));
+  s->latest = s->here;
+  s->here += sizeof(int64_t);
+  s->mem[s->here++] = 0;
+
+  // Name len aligned to 8 bytes, with a null terminator
+  uint8_t name_len = (uint8_t)len + 1;
+  if (name_len % 8 != 0) {
+    name_len += 8 - (name_len % 8);
+  }
+  s->mem[s->here++] = name_len;
+  strncpy(&s->mem[s->here], (char*)addr, len);
+  s->mem[s->here + len] = '\0';
+  s->here += name_len;
+}
+
+void comma(state_t* s) {
+  assert(s->stacktop >= 0);
+  int64_t value = s->stack[s->stacktop--];
+
+  // Store the value in the memory at the current position.
+  memcpy(&s->mem[s->here], &value, sizeof(int64_t));
+  s->here += sizeof(int64_t);
+}
+
+void colon(state_t* s) {
+  char buf[256];
+  size_t len = get_word(s->input, buf, sizeof(buf));
+  if (len == 0) {
+    die("Error: expected a word name after ':'");
+  }
+
+  // Build a new dictionary entry.
+  memcpy(&s->mem[s->here], &s->latest, sizeof(int64_t));
+  s->latest = s->here;
+  s->here += sizeof(int64_t);
+  s->mem[s->here++] = 0;
+
+  if (len % 8 != 0) {
+    len += 8 - (len % 8);
+  }
+  s->mem[s->here++] = (uint8_t)len;
+  strcpy(&s->mem[s->here], buf);
+  s->here += len;
+  s->compiling = 1;
+}
+
+void semicolon(state_t* s) {
+  // Finish the current definition and switch back to execution mode.
+  int64_t end_marker = -1;
+  memcpy(&s->mem[s->here], &end_marker, sizeof(int64_t));
+  s->here += sizeof(int64_t);
+  s->compiling = 0;
 }
 
 // Expects [addr, len] of string on the stack. Finds a dictionary entry
@@ -243,7 +313,6 @@ void register_builtins(state_t* state) {
   register_builtin(state, ".S", 0, _dotS);
   register_builtin(state, "EMIT", 0, emit);
   register_builtin(state, "KEY", 0, key);
-  register_builtin(state, "WORD", 0, word);
   //   register_builtin(state, "FIND", 0, find);
   register_builtin(state, "DROP", 0, drop);
   register_builtin(state, "SWAP", 0, swap);
@@ -253,6 +322,7 @@ void register_builtins(state_t* state) {
   register_builtin(state, "2DROP", 0, drop2);
   register_builtin(state, "+", 0, plus);
   register_builtin(state, "-", 0, minus);
+  register_builtin(state, "*", 0, mul);
   register_builtin(state, "/", 0, _div);
   register_builtin(state, "MOD", 0, mod);
   register_builtin(state, "=", 0, _equals);
@@ -260,6 +330,13 @@ void register_builtins(state_t* state) {
   register_builtin(state, "<", 0, _lt);
   register_builtin(state, ">", 0, _gt);
 
+  register_builtin(state, "WORD", 0, word);
+  register_builtin(state, "CREATEDEF", 0, createdef);
+  register_builtin(state, ",", 0, comma);
+  register_builtin(state, ":", 0, colon);
+  register_builtin(state, ";", F_IMMEDIATE, semicolon);
+
+  // TODO: remove this when almost done
   // Add non-builtin word
   //    : double dup + ;
   memcpy(&state->mem[state->here], &state->latest, sizeof(int64_t));
@@ -282,29 +359,6 @@ void register_builtins(state_t* state) {
   state->here += sizeof(int64_t);
 
   int64_t end_marker = -1;
-  memcpy(&state->mem[state->here], &end_marker, sizeof(int64_t));
-  state->here += sizeof(int64_t);
-
-  // Another non-builtin
-  //    : quad double double ;
-  memcpy(&state->mem[state->here], &state->latest, sizeof(int64_t));
-  state->latest = state->here;
-  state->here += sizeof(int64_t);
-  state->mem[state->here++] = 0;
-  name_len = 8;
-  state->mem[state->here++] = name_len;
-  strcpy(&state->mem[state->here], "QUAD");
-  state->here += name_len;
-
-  dup_offset = find_word_in_dict(state, "DOUBLE");
-  assert(dup_offset != -1);
-  memcpy(&state->mem[state->here], &dup_offset, sizeof(int64_t));
-  state->here += sizeof(int64_t);
-
-  memcpy(&state->mem[state->here], &dup_offset, sizeof(int64_t));
-  state->here += sizeof(int64_t);
-
-  end_marker = -1;
   memcpy(&state->mem[state->here], &end_marker, sizeof(int64_t));
   state->here += sizeof(int64_t);
 }

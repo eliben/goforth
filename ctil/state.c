@@ -16,6 +16,7 @@ state_t* create_state() {
   s->stacktop = -1;
   s->pc = 0;
   s->retstacktop = -1;
+  s->compiling = 0;
   s->input = stdin;
   s->output = stdout;
   return s;
@@ -58,6 +59,10 @@ int64_t find_word_in_dict(state_t* s, const char* word) {
 
 int entry_is_builtin(state_t* s, int64_t entry_offset) {
   return (s->mem[entry_offset + 8] & F_BUILTIN) != 0;
+}
+
+int entry_is_immediate(state_t* s, int64_t entry_offset) {
+  return (s->mem[entry_offset + 8] & F_IMMEDIATE) != 0;
 }
 
 builtin_func_t entry_get_builtin_func(state_t* s, int64_t entry_offset) {
@@ -116,8 +121,21 @@ void interpret(state_t* s) {
 
     int64_t entry_offset = find_word_in_dict(s, word);
     if (entry_offset != -1) {
-      execute_word(s, entry_offset);
+      if (entry_is_immediate(s, entry_offset)) {
+        // Immediate word, execute it directly.
+        execute_word(s, entry_offset);
+      } else if (s->compiling) {
+        // Store the entry offset at the 'here' offset in memory.
+        memcpy(&s->mem[s->here], &entry_offset, sizeof(int64_t));
+        s->here += sizeof(int64_t);
+      } else {
+        // TODO: combine conditions?
+        execute_word(s, entry_offset);
+      }      
     } else {
+      // TODO: handle numbers while compiling!
+      // Maybe have a special LIT builtin that reads the number from
+      // `pc` and pushes it onto the stack, advancing the pc??
       // Try to parse the word as a number.
       char* endptr;
       int64_t num = strtoll(word, &endptr, 10);
