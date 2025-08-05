@@ -9,8 +9,9 @@
 #include "die.h"
 #include "input.h"
 
-// Skip the rest of the line until newline.
-// TODO: reimplement this in Forth using lower-level primitives.
+// TODO: once more machinery is in place, consider rewriting some of these
+// in Forth directly.
+
 void backslash(state_t* s) {
   int c;
   while ((c = fgetc(s->input)) != EOF && c != '\n') {
@@ -26,13 +27,33 @@ void paren(state_t* s) {
   }
 }
 
-// TODO: reimplement _dot in Forth using lower primitives
-void _dot(state_t* s) {
+void dot(state_t* s) {
   assert(s->stacktop >= 0);
   fprintf(s->output, "%ld ", s->stack[s->stacktop--]);
 }
 
-void _dotS(state_t* s) {
+void dotQuote(state_t* s) {
+  char buf[1024];
+  size_t len = 0;
+  int c;
+  while ((c = fgetc(s->input)) != EOF && c != '"') {
+    if (len < sizeof(buf) - 1) {
+      buf[len++] = c;
+    }
+  }
+  if (c == EOF) {
+    die("Unmatched quote in input");
+  }
+  buf[len] = '\0';
+
+  if (s->compiling) {
+
+  } else {
+    fprintf(s->output, "%s", buf);
+  }
+}
+
+void dotS(state_t* s) {
   int64_t len = s->stacktop + 1;
   fprintf(s->output, "<%ld> ", len);
   for (int64_t i = 0; i <= s->stacktop; i++) {
@@ -178,6 +199,13 @@ void litnumber(state_t* s) {
   s->stack[s->stacktop] = *(int64_t*)&s->mem[s->pc];
 }
 
+// void litstring(state_t* s) {
+
+//   // Push the string onto the stack.
+//   s->stacktop++;
+//   s->stack[s->stacktop] = (int64_t)strndup((char*)addr, len);
+// }
+
 // TODO: rewrite this using get_word
 // Read a word from the input stream into an internal buffer; push
 // [addr, len] onto the stack.
@@ -250,6 +278,10 @@ void colon(state_t* s) {
   if (len == 0) {
     die("Error: expected a word name after ':'");
   }
+  if (strcmp(buf, ";") == 0) {
+    // Empty definition: no op.
+    return;
+  }
 
   // Build a new dictionary entry.
   memcpy(&s->mem[s->here], &s->latest, sizeof(int64_t));
@@ -257,6 +289,7 @@ void colon(state_t* s) {
   s->here += sizeof(int64_t);
   s->mem[s->here++] = 0;
 
+  len++;
   if (len % 8 != 0) {
     len += 8 - (len % 8);
   }
@@ -325,10 +358,11 @@ static void register_builtin(state_t* state, const char* name, char flags,
 }
 
 void register_builtins(state_t* state) {
-  register_builtin(state, "\\", 0, backslash);
-  register_builtin(state, "(", 0, paren);
-  register_builtin(state, ".", 0, _dot);
-  register_builtin(state, ".S", 0, _dotS);
+  register_builtin(state, "\\", F_IMMEDIATE, backslash);
+  register_builtin(state, "(", F_IMMEDIATE, paren);
+  register_builtin(state, ".", 0, dot);
+  register_builtin(state, ".\"", 0, dotQuote);
+  register_builtin(state, ".S", 0, dotS);
   register_builtin(state, "EMIT", 0, emit);
   register_builtin(state, "KEY", 0, key);
   //   register_builtin(state, "FIND", 0, find);
@@ -349,6 +383,7 @@ void register_builtins(state_t* state) {
   register_builtin(state, ">", 0, _gt);
 
   register_builtin(state, "LITNUMBER", 0, litnumber);
+  //   register_builtin(state, "LITSTRING", 0, litstring);
   register_builtin(state, "WORD", 0, word);
   register_builtin(state, "CREATEDEF", 0, createdef);
   register_builtin(state, ",", 0, comma);
