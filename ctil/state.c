@@ -131,20 +131,28 @@ void interpret(state_t* s) {
       } else {
         // TODO: combine conditions?
         execute_word(s, entry_offset);
-      }      
+      }
     } else {
-      // TODO: handle numbers while compiling!
-      // Maybe have a special LIT builtin that reads the number from
-      // `pc` and pushes it onto the stack, advancing the pc??
       // Try to parse the word as a number.
       char* endptr;
       int64_t num = strtoll(word, &endptr, 10);
-      if (*endptr == '\0') {
-        // Successfully parsed a number, push it onto the stack.
+      if (*endptr != '\0') {
+        die("Unknown word: %s\n", word);
+      }
+      // Successfully parsed a number.
+      if (s->compiling) {
+        // Store the entry for LIT following the number itself in memory.
+        int64_t lit_offset = find_word_in_dict(s, "LIT");
+        assert(lit_offset != -1);
+        memcpy(&s->mem[s->here], &lit_offset, sizeof(int64_t));
+        s->here += sizeof(int64_t);
+
+        memcpy(&s->mem[s->here], &num, sizeof(int64_t));
+        s->here += sizeof(int64_t);
+      } else {
+        // Push the number onto the stack.
         s->stacktop++;
         s->stack[s->stacktop] = num;
-      } else {
-        die("Unknown word: %s\n", word);
       }
     }
   }

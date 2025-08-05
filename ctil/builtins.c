@@ -161,6 +161,14 @@ void _gt(state_t* s) {
   s->stack[s->stacktop] = (b > a) ? -1 : 0;
 }
 
+// lit is a special builtin emitted in compile mode; it pushes the number
+// stored at the next pc onto the stack and advances the pc.
+void lit(state_t* s) {
+  s->stacktop++;
+  s->pc += sizeof(int64_t);
+  s->stack[s->stacktop] = *(int64_t*)&s->mem[s->pc];
+}
+
 // TODO: rewrite this using get_word
 // Read a word from the input stream into an internal buffer; push
 // [addr, len] onto the stack.
@@ -330,6 +338,7 @@ void register_builtins(state_t* state) {
   register_builtin(state, "<", 0, _lt);
   register_builtin(state, ">", 0, _gt);
 
+  register_builtin(state, "LIT", 0, lit);
   register_builtin(state, "WORD", 0, word);
   register_builtin(state, "CREATEDEF", 0, createdef);
   register_builtin(state, ",", 0, comma);
