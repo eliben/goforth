@@ -35,9 +35,12 @@ func ensureCtilBinaryExists(t *testing.T) {
 var supportedTests = []string{
 	"arith1.4th",
 	"comments.4th",
+	"dotquote-interpret.4th",
+	"dotquote-in-word.4th",
 	"meow5.4th",
 	"stack1.4th",
 	"stack2.4th",
+	"stack-show.4th",
 	"word-def1.4th",
 	"word-def2.4th",
 }

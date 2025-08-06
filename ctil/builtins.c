@@ -89,6 +89,10 @@ void dotS(state_t* s) {
   }
 }
 
+void clearstack(state_t* s) {
+  s->stacktop = -1;
+}
+
 void emit(state_t* s) {
   assert(s->stacktop >= 0 && s->stack[s->stacktop] <= 255);
   int64_t c = s->stack[s->stacktop--];
@@ -401,6 +405,7 @@ void register_builtins(state_t* state) {
   register_builtin(state, ".", 0, dot);
   register_builtin(state, ".\"", F_IMMEDIATE, dotQuote);
   register_builtin(state, ".S", 0, dotS);
+  register_builtin(state, "CLEARSTACK", 0, clearstack);
   register_builtin(state, "EMIT", 0, emit);
   register_builtin(state, "TYPE", 0, type);
   register_builtin(state, "KEY", 0, key);
