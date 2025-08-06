@@ -53,16 +53,12 @@ state_t* create_state();
 // Show the state and a memory dump.
 void show_state(state_t* s, uintptr_t start, uintptr_t len);
 
+// Top-level Forth interpreter consuming the input stream.
 void interpret(state_t* s);
-
-
-// TODO: if it's all in state, I don't need to expose these
 
 // Find a word in the dictionary by its name. Returns the offset of the
 // dictionary entry in mem if found, or -1 if not found.
 int64_t find_word_in_dict(state_t* s, const char* word);
 
-// Execute the word found at the given memory offset.
-void execute_word(state_t* s, int64_t entry_offset);
 
 #endif // STATE_H
