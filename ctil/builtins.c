@@ -433,30 +433,4 @@ void register_builtins(state_t* state) {
   register_builtin(state, ",", 0, comma);
   register_builtin(state, ":", 0, colon);
   register_builtin(state, ";", F_IMMEDIATE, semicolon);
-
-  // TODO: remove this when almost done
-  // Add non-builtin word
-  //    : double dup + ;
-  memcpy(&state->mem[state->here], &state->latest, sizeof(int64_t));
-  state->latest = state->here;
-  state->here += sizeof(int64_t);
-  state->mem[state->here++] = 0;
-  uint8_t name_len = 8;
-  state->mem[state->here++] = name_len;
-  strcpy(&state->mem[state->here], "DOUBLE");
-  state->here += name_len;
-
-  int64_t dup_offset = find_word_in_dict(state, "DUP");
-  assert(dup_offset != -1);
-  memcpy(&state->mem[state->here], &dup_offset, sizeof(int64_t));
-  state->here += sizeof(int64_t);
-
-  int64_t plus_offset = find_word_in_dict(state, "+");
-  assert(plus_offset != -1);
-  memcpy(&state->mem[state->here], &plus_offset, sizeof(int64_t));
-  state->here += sizeof(int64_t);
-
-  int64_t end_marker = -1;
-  memcpy(&state->mem[state->here], &end_marker, sizeof(int64_t));
-  state->here += sizeof(int64_t);
 }
