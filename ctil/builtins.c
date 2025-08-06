@@ -56,7 +56,26 @@ void dotQuote(state_t* s) {
   buf[len] = '\0';
 
   if (s->compiling) {
+    // Store the following in memory:
+    // 
+    // <addr of LITSTRING> <str length> <string> <addr of TYPE>
+    //
+    // The string is 0-terminated, but <str length> is aligned to 8 bytes
+    // to it can be efficiently skipped.
+    int64_t litstring_offset = find_word_in_dict(s, "LITSTRING");
+    assert(litstring_offset != -1);
+    int64_t type_offset = find_word_in_dict(s, "TYPE");
+    assert(type_offset != -1);
 
+    memcpy(&s->mem[s->here], &litstring_offset, sizeof(int64_t));
+    s->here += sizeof(int64_t);
+    int64_t str_len = align_name_len((uint8_t)len);
+    memcpy(&s->mem[s->here], &str_len, sizeof(int64_t));
+    s->here += sizeof(int64_t);
+    memcpy(&s->mem[s->here], buf, len);
+    s->here += str_len;
+    memcpy(&s->mem[s->here], &type_offset, sizeof(int64_t));
+    s->here += sizeof(int64_t);
   } else {
     fprintf(s->output, "%s", buf);
   }
@@ -74,6 +93,15 @@ void emit(state_t* s) {
   assert(s->stacktop >= 0 && s->stack[s->stacktop] <= 255);
   int64_t c = s->stack[s->stacktop--];
   fputc((char)c, s->output);
+}
+
+// type prints a 0-terminated string from memory.
+void type(state_t* s) {
+  assert(s->stacktop >= 1);
+  s->stacktop--; // the length isn't used
+  int64_t addr = s->stack[s->stacktop--];
+
+  fprintf(s->output, "%s", &s->mem[addr]);
 }
 
 void drop(state_t* s) {
@@ -208,12 +236,24 @@ void litnumber(state_t* s) {
   s->stack[s->stacktop] = *(int64_t*)&s->mem[s->pc];
 }
 
-// void litstring(state_t* s) {
+// litstring is a special builtin emitted in compile mode. It's followed by
+// the length of a string and the string itself in memory. It pushes the
+// address and length onto the stack and skips the string.
+void litstring(state_t* s) {
+  s->pc += sizeof(int64_t);
+  int64_t len = *(int64_t*)&s->mem[s->pc];
+  s->pc += sizeof(int64_t);
+  int64_t addr = s->pc;
 
-//   // Push the string onto the stack.
-//   s->stacktop++;
-//   s->stack[s->stacktop] = (int64_t)strndup((char*)addr, len);
-// }
+  s->stacktop++;
+  s->stack[s->stacktop] = addr;
+  s->stacktop++;
+  s->stack[s->stacktop] = len;
+
+  // Skip the string, moving to its last word. After builtins are executed,
+  // s->pc is always bumped by one word.
+  s->pc += len - sizeof(int64_t);
+}
 
 // TODO: rewrite this using get_word
 // Read a word from the input stream into an internal buffer; push
@@ -359,9 +399,10 @@ void register_builtins(state_t* state) {
   register_builtin(state, "\\", F_IMMEDIATE, backslash);
   register_builtin(state, "(", F_IMMEDIATE, paren);
   register_builtin(state, ".", 0, dot);
-  register_builtin(state, ".\"", 0, dotQuote);
+  register_builtin(state, ".\"", F_IMMEDIATE, dotQuote);
   register_builtin(state, ".S", 0, dotS);
   register_builtin(state, "EMIT", 0, emit);
+  register_builtin(state, "TYPE", 0, type);
   register_builtin(state, "KEY", 0, key);
   //   register_builtin(state, "FIND", 0, find);
   register_builtin(state, "DROP", 0, drop);
@@ -381,7 +422,7 @@ void register_builtins(state_t* state) {
   register_builtin(state, ">", 0, _gt);
 
   register_builtin(state, "LITNUMBER", 0, litnumber);
-  //   register_builtin(state, "LITSTRING", 0, litstring);
+  register_builtin(state, "LITSTRING", 0, litstring);
   register_builtin(state, "WORD", 0, word);
   register_builtin(state, "CREATEDEF", 0, createdef);
   register_builtin(state, ",", 0, comma);

@@ -139,9 +139,9 @@ void interpret(state_t* s) {
       // Successfully parsed a number.
       if (s->compiling) {
         // Store the entry for LITNUMBER following the number itself in memory.
-        int64_t lit_offset = find_word_in_dict(s, "LITNUMBER");
-        assert(lit_offset != -1);
-        memcpy(&s->mem[s->here], &lit_offset, sizeof(int64_t));
+        int64_t litnumber_offset = find_word_in_dict(s, "LITNUMBER");
+        assert(litnumber_offset != -1);
+        memcpy(&s->mem[s->here], &litnumber_offset, sizeof(int64_t));
         s->here += sizeof(int64_t);
 
         memcpy(&s->mem[s->here], &num, sizeof(int64_t));
