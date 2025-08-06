@@ -182,6 +182,12 @@ func (it *Interpreter) dot(string) {
 // the input pointer to the next word. If not in compile mode, it actually
 // prints out the string to stdout.
 func (it *Interpreter) dotQuote(string) {
+	// Per the semantics of gforth, skip the first whitespace following the ."
+	// word.
+	if isWhitespace(it.input[it.inputPtr]) {
+		it.inputPtr++
+	}
+
 	// Find the end of the string, which is delimited by a double quote.
 	if idx := strings.Index(it.input[it.inputPtr:], `"`); idx != -1 {
 		s := it.input[it.inputPtr : it.inputPtr+idx]

@@ -173,7 +173,6 @@ func (it *Interpreter) nextWordCaseSensitive() string {
 	}
 
 	word := it.input[start:it.inputPtr]
-	it.skipWhitespace()
 	return word
 }
 
