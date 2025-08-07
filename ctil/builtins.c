@@ -57,7 +57,7 @@ void dotQuote(state_t* s) {
 
   if (s->compiling) {
     // Store the following in memory:
-    // 
+    //
     // <addr of LITSTRING> <str length> <string> <addr of TYPE>
     //
     // The string is 0-terminated, but <str length> is aligned to 8 bytes
@@ -147,6 +147,34 @@ void dup2(state_t* s) {
 void drop2(state_t* s) {
   assert(s->stacktop >= 1);
   s->stacktop -= 2;
+}
+
+// Pop a value from the return stack and push it onto the data stack.
+void fromR(state_t* s) {
+  assert(s->retstacktop >= 0);
+  s->stacktop++;
+  s->stack[s->stacktop] = s->retstack[s->retstacktop--];
+}
+
+// Pop a value from the data stack and push it onto the return stack.
+void toR(state_t* s) {
+  assert(s->stacktop >= 0);
+  s->retstacktop++;
+  s->retstack[s->retstacktop] = s->stack[s->stacktop--];
+}
+
+// Copy the top value from the return stack to the data stack without removing
+// it from the return stack.
+void copyFromR(state_t* s) {
+  assert(s->retstacktop >= 0);
+  s->stacktop++;
+  s->stack[s->stacktop] = s->retstack[s->retstacktop];
+}
+
+// Drop the top value from the return stack.
+void dropR(state_t* s) {
+  assert(s->retstacktop >= 0);
+  s->retstacktop--;
 }
 
 void key(state_t* s) {
@@ -416,6 +444,10 @@ void register_builtins(state_t* state) {
   register_builtin(state, "OVER", 0, over);
   register_builtin(state, "2DUP", 0, dup2);
   register_builtin(state, "2DROP", 0, drop2);
+  register_builtin(state, "R>", 0, fromR);
+  register_builtin(state, ">R", 0, toR);
+  register_builtin(state, "R@", 0, copyFromR);
+  register_builtin(state, "RDROP", 0, dropR);
   register_builtin(state, "+", 0, plus);
   register_builtin(state, "-", 0, minus);
   register_builtin(state, "*", 0, mul);
