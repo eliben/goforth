@@ -15,7 +15,8 @@ func TestForthFiles(t *testing.T) {
 	}
 
 	for _, file := range files {
-		if file.IsDir() || !strings.HasSuffix(file.Name(), ".4th") {
+		// Run all files that end with .4th, except those starting with "ctil-".
+		if file.IsDir() || !strings.HasSuffix(file.Name(), ".4th") || strings.HasPrefix(file.Name(), "ctil-") {
 			continue
 		}
 		t.Run(file.Name(), func(t *testing.T) {

@@ -12,6 +12,7 @@ import (
 
 const ctilDir = "ctil"
 const ctilBinaryName = "ctil"
+const ctilPreludeName = "prelude.4th"
 
 func ensureCtilBinaryExists(t *testing.T) {
 	if _, err := os.Stat(filepath.Join(ctilDir, ctilBinaryName)); os.IsNotExist(err) {
@@ -31,7 +32,7 @@ func ensureCtilBinaryExists(t *testing.T) {
 	}
 }
 
-// slice of supported tests
+// slice of supported tests out of those that don't start with "ctil-".
 var supportedTests = []string{
 	"arith1.4th",
 	"comments.4th",
@@ -58,7 +59,7 @@ func TestCtilForthFiles(t *testing.T) {
 		if file.IsDir() || !strings.HasSuffix(file.Name(), ".4th") {
 			continue
 		}
-		if !slices.Contains(supportedTests, file.Name()) {
+		if !strings.HasPrefix(file.Name(), "ctil-") && !slices.Contains(supportedTests, file.Name()) {
 			continue
 		}
 		t.Run(file.Name(), func(t *testing.T) {
@@ -69,7 +70,9 @@ func TestCtilForthFiles(t *testing.T) {
 
 			// t.Logf("Sending code to ctil binary:\n===\n%s\n===", code)
 
-			cmd := exec.Command(filepath.Join(ctilDir, ctilBinaryName))
+			cmd := exec.Command(
+				filepath.Join(ctilDir, ctilBinaryName),
+				"-i", filepath.Join(ctilDir, ctilPreludeName))
 			cmdStdin, err := cmd.StdinPipe()
 			if err != nil {
 				t.Fatalf("Failed to create stdin pipe: %v", err)
