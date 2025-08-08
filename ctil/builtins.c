@@ -332,13 +332,26 @@ void create(state_t* s) {
   memcpy(&s->mem[s->here], &s->latest, sizeof(int64_t));
   s->latest = s->here;
   s->here += sizeof(int64_t);
-  s->mem[s->here++] = F_VALUE;
+  s->mem[s->here++] = 0;
 
   uint8_t name_len = align_name_len((uint8_t)len);
   s->mem[s->here++] = name_len;
   strncpy(&s->mem[s->here], buf, len);
   s->mem[s->here + len] = '\0';
   s->here += name_len;
+
+  int64_t litnumber_offset = find_word_in_dict(s, "LITNUMBER");
+  assert(litnumber_offset != -1);
+  memcpy(&s->mem[s->here], &litnumber_offset, sizeof(int64_t));
+  s->here += sizeof(int64_t);
+
+  int64_t store_offset = s->here + 2 * sizeof(int64_t);
+  memcpy(&s->mem[s->here], &store_offset, sizeof(int64_t));
+  s->here += sizeof(int64_t);
+
+  int64_t end_marker = -1;
+  memcpy(&s->mem[s->here], &end_marker, sizeof(int64_t));
+  s->here += sizeof(int64_t);
 }
 
 // TODO: probably remove this??

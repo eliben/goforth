@@ -49,7 +49,6 @@ typedef void (*builtin_func_t)(state_t*);
 
 // TODO: document these
 #define F_BUILTIN 0x80
-#define F_VALUE 0x40
 #define F_IMMEDIATE 0x01
 
 // Create a new interpreter state.

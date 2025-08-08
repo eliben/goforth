@@ -60,10 +60,6 @@ int entry_is_builtin(state_t* s, int64_t entry_offset) {
   return (s->mem[entry_offset + 8] & F_BUILTIN) != 0;
 }
 
-int entry_is_value(state_t* s, int64_t entry_offset) {
-  return (s->mem[entry_offset + 8] & F_VALUE) != 0;
-}
-
 int entry_is_immediate(state_t* s, int64_t entry_offset) {
   return (s->mem[entry_offset + 8] & F_IMMEDIATE) != 0;
 }
@@ -86,12 +82,6 @@ void execute_word(state_t* s, int64_t entry_offset) {
     builtin_func_t func = entry_get_builtin_func(s, entry_offset);
     func(s);
     return;
-  } else if (entry_is_value(s, entry_offset)) {
-    // It's a value, push its address onto the stack.
-    int64_t value_offset = entry_get_code_offset(s, entry_offset);
-    s->stacktop++;
-    s->stack[s->stacktop] = value_offset;
-    return;
   }
 
   // The entry is not a builtin; set pc to the first word of its code and
@@ -111,11 +101,6 @@ void execute_word(state_t* s, int64_t entry_offset) {
       builtin_func_t func = entry_get_builtin_func(s, subentry);
       func(s);
       s->pc += sizeof(int64_t);
-    } else if (entry_is_value(s, subentry)) {
-        // It's a value, push its address.
-        int64_t value_offset = entry_get_code_offset(s, subentry);
-        s->stacktop++;
-        s->stack[s->stacktop] = value_offset;
     } else {
       s->retstacktop++;
       s->retstack[s->retstacktop] = s->pc + sizeof(int64_t);
