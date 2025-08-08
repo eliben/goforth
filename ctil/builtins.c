@@ -37,8 +37,7 @@ void paren(state_t* s) {
 }
 
 void dot(state_t* s) {
-  assert(s->stacktop >= 0);
-  fprintf(s->output, "%ld ", s->stack[s->stacktop--]);
+  fprintf(s->output, "%ld ", pop_data_stack(s));
 }
 
 void dotQuote(state_t* s) {
@@ -94,23 +93,18 @@ void clearstack(state_t* s) {
 }
 
 void emit(state_t* s) {
-  assert(s->stacktop >= 0 && s->stack[s->stacktop] <= 255);
-  int64_t c = s->stack[s->stacktop--];
-  fputc((char)c, s->output);
+  fputc((char)pop_data_stack(s), s->output);
 }
 
 // type prints a 0-terminated string from memory.
 void type(state_t* s) {
-  assert(s->stacktop >= 1);
-  s->stacktop--; // the length isn't used
-  int64_t addr = s->stack[s->stacktop--];
-
+  pop_data_stack(s); // Pop the length, which we don't use.
+  int64_t addr = pop_data_stack(s);
   fprintf(s->output, "%s", &s->mem[addr]);
 }
 
 void drop(state_t* s) {
-  assert(s->stacktop >= 0);
-  s->stacktop--;
+  pop_data_stack(s);
 }
 
 void swap(state_t* s) {
@@ -138,37 +132,32 @@ void dup2(state_t* s) {
   int64_t v1 = s->stack[s->stacktop];
   int64_t v2 = s->stack[s->stacktop - 1];
 
-  s->stacktop++;
-  s->stack[s->stacktop] = v2;
-  s->stacktop++;
-  s->stack[s->stacktop] = v1;
+  push_data_stack(s, v2);
+  push_data_stack(s, v1);
 }
 
 void drop2(state_t* s) {
-  assert(s->stacktop >= 1);
-  s->stacktop -= 2;
+  pop_data_stack(s);
+  pop_data_stack(s);
 }
 
 // Pop a value from the return stack and push it onto the data stack.
 void fromR(state_t* s) {
   assert(s->retstacktop >= 0);
-  s->stacktop++;
-  s->stack[s->stacktop] = s->retstack[s->retstacktop--];
+  push_data_stack(s, s->retstack[s->retstacktop--]);
 }
 
 // Pop a value from the data stack and push it onto the return stack.
 void toR(state_t* s) {
-  assert(s->stacktop >= 0);
   s->retstacktop++;
-  s->retstack[s->retstacktop] = s->stack[s->stacktop--];
+  s->retstack[s->retstacktop] = pop_data_stack(s);
 }
 
 // Copy the top value from the return stack to the data stack without removing
 // it from the return stack.
 void copyFromR(state_t* s) {
   assert(s->retstacktop >= 0);
-  s->stacktop++;
-  s->stack[s->stacktop] = s->retstack[s->retstacktop];
+  push_data_stack(s, s->retstack[s->retstacktop]);
 }
 
 // Drop the top value from the return stack.
@@ -182,90 +171,79 @@ void key(state_t* s) {
   if (c == EOF) {
     exit(0);
   }
-  s->stacktop++;
-  s->stack[s->stacktop] = c;
+  push_data_stack(s, c);
 }
 
 void plus(state_t* s) {
   assert(s->stacktop >= 1);
-  int64_t a = s->stack[s->stacktop--];
-  int64_t b = s->stack[s->stacktop--];
-  s->stacktop++;
-  s->stack[s->stacktop] = b + a;
+  int64_t a = pop_data_stack(s);
+  int64_t b = pop_data_stack(s);
+  push_data_stack(s, b + a);
 }
 
 void minus(state_t* s) {
   assert(s->stacktop >= 1);
-  int64_t a = s->stack[s->stacktop--];
-  int64_t b = s->stack[s->stacktop--];
-  s->stacktop++;
-  s->stack[s->stacktop] = b - a;
+  int64_t a = pop_data_stack(s);
+  int64_t b = pop_data_stack(s);
+  push_data_stack(s, b - a);
 }
 
 void mod(state_t* s) {
   assert(s->stacktop >= 1);
-  int64_t a = s->stack[s->stacktop--];
-  int64_t b = s->stack[s->stacktop--];
+  int64_t a = pop_data_stack(s);
+  int64_t b = pop_data_stack(s);
   assert(b != 0);
-  s->stacktop++;
-  s->stack[s->stacktop] = b % a;
+  push_data_stack(s, b % a);
 }
 
 void mul(state_t* s) {
   assert(s->stacktop >= 1);
-  int64_t a = s->stack[s->stacktop--];
-  int64_t b = s->stack[s->stacktop--];
-  s->stacktop++;
-  s->stack[s->stacktop] = b * a;
+  int64_t a = pop_data_stack(s);
+  int64_t b = pop_data_stack(s);
+  push_data_stack(s, b * a);
 }
 
 void _div(state_t* s) {
   assert(s->stacktop >= 1);
-  int64_t a = s->stack[s->stacktop--];
-  int64_t b = s->stack[s->stacktop--];
+  int64_t a = pop_data_stack(s);
+  int64_t b = pop_data_stack(s);
   assert(b != 0);
-  s->stacktop++;
-  s->stack[s->stacktop] = b / a;
+  push_data_stack(s, b / a);
 }
 
 void _equals(state_t* s) {
   assert(s->stacktop >= 1);
-  int64_t a = s->stack[s->stacktop--];
-  int64_t b = s->stack[s->stacktop--];
-  s->stacktop++;
-  s->stack[s->stacktop] = (b == a) ? -1 : 0;
+  int64_t a = pop_data_stack(s);
+  int64_t b = pop_data_stack(s);
+  push_data_stack(s, (b == a) ? -1 : 0);
 }
 
 void _notequals(state_t* s) {
   assert(s->stacktop >= 1);
-  int64_t a = s->stack[s->stacktop--];
-  int64_t b = s->stack[s->stacktop--];
-  s->stacktop++;
-  s->stack[s->stacktop] = (b != a) ? -1 : 0;
+  int64_t a = pop_data_stack(s);
+  int64_t b = pop_data_stack(s);
+  push_data_stack(s, (b != a) ? -1 : 0);
 }
 
 void _lt(state_t* s) {
   assert(s->stacktop >= 1);
-  int64_t a = s->stack[s->stacktop--];
-  int64_t b = s->stack[s->stacktop--];
-  s->stacktop++;
-  s->stack[s->stacktop] = (b < a) ? -1 : 0;
+  int64_t a = pop_data_stack(s);
+  int64_t b = pop_data_stack(s);
+  push_data_stack(s, (b < a) ? -1 : 0);
 }
 
 void _gt(state_t* s) {
   assert(s->stacktop >= 1);
-  int64_t a = s->stack[s->stacktop--];
-  int64_t b = s->stack[s->stacktop--];
-  s->stacktop++;
-  s->stack[s->stacktop] = (b > a) ? -1 : 0;
+  int64_t a = pop_data_stack(s);
+  int64_t b = pop_data_stack(s);
+  push_data_stack(s, (b > a) ? -1 : 0);
 }
 
 // litnumber is a special builtin emitted in compile mode; it pushes the number
 // stored at the next pc onto the stack and advances the pc.
 void litnumber(state_t* s) {
-  s->stacktop++;
   s->pc += sizeof(int64_t);
-  s->stack[s->stacktop] = *(int64_t*)&s->mem[s->pc];
+  push_data_stack(s, *(int64_t*)&s->mem[s->pc]);
 }
 
 // litstring is a special builtin emitted in compile mode. It's followed by
@@ -277,10 +255,8 @@ void litstring(state_t* s) {
   s->pc += sizeof(int64_t);
   int64_t addr = s->pc;
 
-  s->stacktop++;
-  s->stack[s->stacktop] = addr;
-  s->stacktop++;
-  s->stack[s->stacktop] = len;
+  push_data_stack(s, addr);
+  push_data_stack(s, len);
 
   // Skip the string, moving to its last word. After builtins are executed,
   // s->pc is always bumped by one word.
@@ -358,8 +334,7 @@ void create(state_t* s) {
 
 void allot(state_t* s) {
   // Allocate space in memory for a new word.
-  assert(s->stacktop >= 0);
-  int64_t size = s->stack[s->stacktop--];
+  int64_t size = pop_data_stack(s);
   if (s->here + size > sizeof(s->mem)) {
     die("Memory allocation out of bounds: %ld requested, %ld available", size,
         sizeof(s->mem) - s->here);
@@ -369,18 +344,16 @@ void allot(state_t* s) {
 
 void cells(state_t* s) {
   assert(s->stacktop >= 0);
-  int64_t count = s->stack[s->stacktop--];
-  s->stacktop++;
-  s->stack[s->stacktop] = count * sizeof(int64_t);
+  int64_t count = pop_data_stack(s);
+  push_data_stack(s, count * sizeof(int64_t));
 }
 
 // TODO: probably remove this??
 // In JonesForth, this is called CREATE, but it's not a standard Forthe CREATE,
 // so we give it a special name.
 void createdef(state_t* s) {
-  assert(s->stacktop >= 1);
-  int64_t len = s->stack[s->stacktop--];
-  int64_t addr = s->stack[s->stacktop--];
+  int64_t len = pop_data_stack(s);
+  int64_t addr = pop_data_stack(s);
 
   // Build a new dictionary entry.
   memcpy(&s->mem[s->here], &s->latest, sizeof(int64_t));
@@ -396,17 +369,14 @@ void createdef(state_t* s) {
 }
 
 void comma(state_t* s) {
-  assert(s->stacktop >= 0);
-  int64_t value = s->stack[s->stacktop--];
-
+  int64_t value = pop_data_stack(s);
   // Store the value in the memory at the current position.
   memcpy(&s->mem[s->here], &value, sizeof(int64_t));
   s->here += sizeof(int64_t);
 }
 
 void at(state_t* s) {
-  assert(s->stacktop >= 0);
-  int64_t addr = s->stack[s->stacktop--];
+  int64_t addr = pop_data_stack(s);
 
   // Read the value from memory at the given address.
   if (addr < 0 || addr >= sizeof(s->mem) - sizeof(int64_t)) {
@@ -414,14 +384,12 @@ void at(state_t* s) {
   }
   int64_t value;
   memcpy(&value, &s->mem[addr], sizeof(int64_t));
-  s->stacktop++;
-  s->stack[s->stacktop] = value;
+  push_data_stack(s, value);
 }
 
 void exclamation(state_t* s) {
-  assert(s->stacktop >= 1);
-  int64_t addr = s->stack[s->stacktop--];
-  int64_t value = s->stack[s->stacktop--];
+  int64_t addr = pop_data_stack(s);
+  int64_t value = pop_data_stack(s);
 
   // Write the value to memory at the given address.
   if (addr < 0 || addr >= sizeof(s->mem) - sizeof(int64_t)) {
@@ -431,8 +399,7 @@ void exclamation(state_t* s) {
 }
 
 void question(state_t* s) {
-  assert(s->stacktop >= 0);
-  int64_t addr = s->stack[s->stacktop--];
+  int64_t addr = pop_data_stack(s);
 
   if (addr < 0 || addr >= sizeof(s->mem) - sizeof(int64_t)) {
     die("Memory access out of bounds: %ld", addr);

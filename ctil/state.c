@@ -21,6 +21,17 @@ state_t* create_state() {
   return s;
 }
 
+void push_data_stack(state_t* s, int64_t value) {
+  assert(s->stacktop < (int64_t)(sizeof(s->stack) / sizeof(s->stack[0])) - 1);
+  s->stacktop++;
+  s->stack[s->stacktop] = value;
+}
+
+int64_t pop_data_stack(state_t* s) {
+  assert(s->stacktop >= 0);
+  return s->stack[s->stacktop--];
+}
+
 void show_state(state_t* s, uintptr_t start, uintptr_t len) {
   // Print latest, here etc.
   printf("State:\n");
@@ -146,9 +157,7 @@ void interpret(state_t* s) {
         memcpy(&s->mem[s->here], &num, sizeof(int64_t));
         s->here += sizeof(int64_t);
       } else {
-        // Push the number onto the stack.
-        s->stacktop++;
-        s->stack[s->stacktop] = num;
+        push_data_stack(s, num);
       }
     }
   }

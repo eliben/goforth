@@ -34,7 +34,7 @@ typedef struct {
 
 // TODO: add "pop data stack" helper, and push data stack?
 
-// TODO: can this be moved?
+// The function type of builtin functions implemented in C.
 typedef void (*builtin_func_t)(state_t*);
 
 // Dictionary entry:
@@ -66,5 +66,10 @@ void interpret(state_t* s);
 // dictionary entry in mem if found, or -1 if not found.
 int64_t find_word_in_dict(state_t* s, const char* word);
 
+// Pushes value onto the data stack; asserts that the stack is not full.
+void push_data_stack(state_t* s, int64_t value);
+
+// Pops a value from the data stack; asserts that the stack is not empty.
+int64_t pop_data_stack(state_t* s);
 
 #endif // STATE_H
