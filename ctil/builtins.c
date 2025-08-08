@@ -340,6 +340,8 @@ void create(state_t* s) {
   s->mem[s->here + len] = '\0';
   s->here += name_len;
 
+  // We emit a word that has LITNUMBER <addr> in it; the <addr> points to
+  // the here following this definition in memory.
   int64_t litnumber_offset = find_word_in_dict(s, "LITNUMBER");
   assert(litnumber_offset != -1);
   memcpy(&s->mem[s->here], &litnumber_offset, sizeof(int64_t));
@@ -366,8 +368,10 @@ void allot(state_t* s) {
 }
 
 void cells(state_t* s) {
+  assert(s->stacktop >= 0);
+  int64_t count = s->stack[s->stacktop--];
   s->stacktop++;
-  s->stack[s->stacktop] = sizeof(int64_t);
+  s->stack[s->stacktop] = count * sizeof(int64_t);
 }
 
 // TODO: probably remove this??
@@ -424,6 +428,17 @@ void exclamation(state_t* s) {
     die("Memory access out of bounds: %ld", addr);
   }
   memcpy(&s->mem[addr], &value, sizeof(int64_t));
+}
+
+void question(state_t* s) {
+  assert(s->stacktop >= 0);
+  int64_t addr = s->stack[s->stacktop--];
+
+  if (addr < 0 || addr >= sizeof(s->mem) - sizeof(int64_t)) {
+    die("Memory access out of bounds: %ld", addr);
+  }
+
+  fprintf(s->output, "%ld ", *(int64_t*)&s->mem[addr]);
 }
 
 void colon(state_t* s) {
@@ -548,6 +563,7 @@ void register_builtins(state_t* state) {
   register_builtin(state, ",", 0, comma);
   register_builtin(state, "@", 0, at);
   register_builtin(state, "!", 0, exclamation);
+  register_builtin(state, "?", 0, question);
   register_builtin(state, "CELLS", 0, cells);
   register_builtin(state, "ALLOT", 0, allot);
 

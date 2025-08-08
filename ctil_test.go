@@ -35,6 +35,7 @@ func ensureCtilBinaryExists(t *testing.T) {
 // slice of supported tests out of those that don't start with "ctil-".
 var supportedTests = []string{
 	"arith1.4th",
+	"array-alloc.4th",
 	"comments.4th",
 	"create.4th",
 	"dotquote-interpret.4th",
