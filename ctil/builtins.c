@@ -354,6 +354,22 @@ void create(state_t* s) {
   s->here += sizeof(int64_t);
 }
 
+void allot(state_t* s) {
+  // Allocate space in memory for a new word.
+  assert(s->stacktop >= 0);
+  int64_t size = s->stack[s->stacktop--];
+  if (s->here + size > sizeof(s->mem)) {
+    die("Memory allocation out of bounds: %ld requested, %ld available", size,
+        sizeof(s->mem) - s->here);
+  }
+  s->here += size;
+}
+
+void cells(state_t* s) {
+  s->stacktop++;
+  s->stack[s->stacktop] = sizeof(int64_t);
+}
+
 // TODO: probably remove this??
 // In JonesForth, this is called CREATE, but it's not a standard Forthe CREATE,
 // so we give it a special name.
@@ -526,10 +542,14 @@ void register_builtins(state_t* state) {
   register_builtin(state, "WORD", 0, word);
   register_builtin(state, "CREATEDEF", 0, createdef);
 
+  // TODO: how does CREATE work in compile mode?!
   register_builtin(state, "CREATE", 0, create);
+
   register_builtin(state, ",", 0, comma);
   register_builtin(state, "@", 0, at);
   register_builtin(state, "!", 0, exclamation);
+  register_builtin(state, "CELLS", 0, cells);
+  register_builtin(state, "ALLOT", 0, allot);
 
   register_builtin(state, ":", 0, colon);
   register_builtin(state, ";", F_IMMEDIATE, semicolon);
