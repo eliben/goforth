@@ -17,7 +17,6 @@ state_t* create_state() {
   s->pc = 0;
   s->retstacktop = -1;
   s->compiling = 0;
-  s->input = stdin;
   s->output = stdout;
   return s;
 }

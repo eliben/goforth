@@ -32,6 +32,7 @@ typedef struct {
   FILE* output;
 } state_t;
 
+// TODO: can this be moved?
 typedef void (*builtin_func_t)(state_t*);
 
 // Dictionary entry:
@@ -47,7 +48,9 @@ typedef void (*builtin_func_t)(state_t*);
 #define F_BUILTIN 0x80
 #define F_IMMEDIATE 0x40
 
-// Create a new state.
+// Create a new interpreter state.
+// Note: this doesn't set the input stream; this has to be set manually
+// before 'interpret' is called.
 state_t* create_state();
 
 // Show the state and a memory dump.
