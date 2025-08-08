@@ -7,6 +7,7 @@ import (
 	"testing"
 )
 
+// TODO: document how tests run
 func TestForthFiles(t *testing.T) {
 	testDir := "testdata"
 	files, err := os.ReadDir(testDir)

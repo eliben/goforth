@@ -32,6 +32,8 @@ typedef struct {
   FILE* output;
 } state_t;
 
+// TODO: add "pop data stack" helper, and push data stack?
+
 // TODO: can this be moved?
 typedef void (*builtin_func_t)(state_t*);
 
@@ -45,8 +47,10 @@ typedef void (*builtin_func_t)(state_t*);
 //     byte.
 // - Code (variable length)
 
+// TODO: document these
 #define F_BUILTIN 0x80
-#define F_IMMEDIATE 0x40
+#define F_VALUE 0x40
+#define F_IMMEDIATE 0x01
 
 // Create a new interpreter state.
 // Note: this doesn't set the input stream; this has to be set manually
