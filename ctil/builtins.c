@@ -296,6 +296,16 @@ void word(state_t* s) {
   s->stack[s->stacktop] = writeptr;
 }
 
+// Create reads the next word from the input stream and creates a new
+// dictionary entry for it. The word contains a LITNUMBER <addr> in it,
+// where <addr> is the address of the memory location HERE points to just
+// after the dictionary definition. This is usually used in combination
+// with COMMA or ALLOT to allocate space for the word's data.
+//
+// When CREATE is compiled into another word's definition, when it's executed
+// it reads the next word from the input stream at the point of execution.
+// Therefore it's _not_ IMMEDIATE.
+// See the definition of VARIABLE for an example.
 void create(state_t* s) {
   // Create a new dictionary entry for a word.
   char buf[256];
@@ -524,7 +534,8 @@ void register_builtins(state_t* state) {
   register_builtin(state, "WORD", 0, word);
   register_builtin(state, "CREATEDEF", 0, createdef);
 
-  // TODO: how does CREATE work in compile mode?!
+  // TODO: CHAR shold work like CREATE in compile mode
+
   register_builtin(state, "CREATE", 0, create);
 
   register_builtin(state, ",", 0, comma);

@@ -1,8 +1,22 @@
 : '\n' 10 ;
-: BL 32 ;
+: bl 32 ;
 
 \ CR prints a carriage return
-: CR '\n' EMIT ;
+: cr '\n' emit ;
 
 \ SPACE prints a space
-: SPACE BL EMIT ;
+: space bl emit ;
+
+\ VARIABLE expects a name following it in the input
+\ ( "name" -- a-addr )
+: variable create 1 cells allot ;
+
+: tuck ( x y -- y x y )
+  swap over ;
+
+: +! ( addend addr -- )
+  TUCK      ( addr addend addr )
+  @         ( addr addend value-at-addr )
+  +         ( addr updated-value )
+  swap      ( updated-value addr )
+  ! ;

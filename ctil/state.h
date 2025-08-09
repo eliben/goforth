@@ -32,8 +32,6 @@ typedef struct {
   FILE* output;
 } state_t;
 
-// TODO: add "pop data stack" helper, and push data stack?
-
 // The function type of builtin functions implemented in C.
 typedef void (*builtin_func_t)(state_t*);
 
@@ -47,8 +45,14 @@ typedef void (*builtin_func_t)(state_t*);
 //     byte.
 // - Code (variable length)
 
-// TODO: document these
+// Flags for dictionary entries.
+
+// F_BUILTIN: if set, the entry is a builtin function implemented in C.
 #define F_BUILTIN 0x80
+
+// F_IMMEDIATE: if set, the entry is an immediate word that is executed
+// immediately when encountered, rather than being compiled into the current
+// definition.
 #define F_IMMEDIATE 0x01
 
 // Create a new interpreter state.

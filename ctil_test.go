@@ -45,6 +45,7 @@ var supportedTests = []string{
 	"stack1.4th",
 	"stack2.4th",
 	"stack-show.4th",
+	"variable.4th",
 	"word-def1.4th",
 	"word-def2.4th",
 }
