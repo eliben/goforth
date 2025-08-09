@@ -9,6 +9,9 @@
 #include "die.h"
 #include "input.h"
 
+// TODO: once more machinery is in place, try moving as much as possible into
+// the prelude.
+
 // Align a name length to 8 bytes, including the null terminator.
 static uint8_t align_name_len(uint8_t len) {
   len++;
@@ -17,9 +20,6 @@ static uint8_t align_name_len(uint8_t len) {
   }
   return len;
 }
-
-// TODO: once more machinery is in place, consider rewriting some of these
-// in Forth directly.
 
 void backslash(state_t* s) {
   int c;
@@ -188,12 +188,13 @@ void minus(state_t* s) {
   push_data_stack(s, b - a);
 }
 
-void mod(state_t* s) {
+void divmod(state_t* s) {
   assert(s->stacktop >= 1);
   int64_t a = pop_data_stack(s);
   int64_t b = pop_data_stack(s);
-  assert(b != 0);
+  assert(a != 0);
   push_data_stack(s, b % a);
+  push_data_stack(s, b / a);
 }
 
 void mul(state_t* s) {
@@ -201,14 +202,6 @@ void mul(state_t* s) {
   int64_t a = pop_data_stack(s);
   int64_t b = pop_data_stack(s);
   push_data_stack(s, b * a);
-}
-
-void _div(state_t* s) {
-  assert(s->stacktop >= 1);
-  int64_t a = pop_data_stack(s);
-  int64_t b = pop_data_stack(s);
-  assert(b != 0);
-  push_data_stack(s, b / a);
 }
 
 void _equals(state_t* s) {
@@ -358,26 +351,6 @@ void cells(state_t* s) {
   push_data_stack(s, count * sizeof(int64_t));
 }
 
-// TODO: probably remove this??
-// In JonesForth, this is called CREATE, but it's not a standard Forthe CREATE,
-// so we give it a special name.
-void createdef(state_t* s) {
-  int64_t len = pop_data_stack(s);
-  int64_t addr = pop_data_stack(s);
-
-  // Build a new dictionary entry.
-  memcpy(&s->mem[s->here], &s->latest, sizeof(int64_t));
-  s->latest = s->here;
-  s->here += sizeof(int64_t);
-  s->mem[s->here++] = 0;
-
-  uint8_t name_len = align_name_len((uint8_t)len);
-  s->mem[s->here++] = name_len;
-  strncpy(&s->mem[s->here], (char*)addr, len);
-  s->mem[s->here + len] = '\0';
-  s->here += name_len;
-}
-
 void comma(state_t* s) {
   int64_t value = pop_data_stack(s);
   // Store the value in the memory at the current position.
@@ -521,9 +494,7 @@ void register_builtins(state_t* state) {
   register_builtin(state, "-", 0, minus);
   register_builtin(state, "*", 0, mul);
 
-  // TODO: Do these with /mod like jonesforth?
-  register_builtin(state, "/", 0, _div);
-  register_builtin(state, "MOD", 0, mod);
+  register_builtin(state, "/MOD", 0, divmod);
   register_builtin(state, "=", 0, _equals);
   register_builtin(state, "<>", 0, _notequals);
   register_builtin(state, "<", 0, _lt);
@@ -532,7 +503,6 @@ void register_builtins(state_t* state) {
   register_builtin(state, "LITNUMBER", 0, litnumber);
   register_builtin(state, "LITSTRING", 0, litstring);
   register_builtin(state, "WORD", 0, word);
-  register_builtin(state, "CREATEDEF", 0, createdef);
 
   // TODO: CHAR shold work like CREATE in compile mode
 

@@ -7,6 +7,10 @@
 \ SPACE prints a space
 : space bl emit ;
 
+\ Implement / and mod in terms of /mod
+: / /mod swap drop ;
+: mod /mod drop ;
+
 \ VARIABLE expects a name following it in the input
 \ ( "name" -- a-addr )
 : variable create 1 cells allot ;
