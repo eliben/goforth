@@ -345,12 +345,6 @@ void allot(state_t* s) {
   s->here += size;
 }
 
-void cells(state_t* s) {
-  assert(s->stacktop >= 0);
-  int64_t count = pop_data_stack(s);
-  push_data_stack(s, count * sizeof(int64_t));
-}
-
 void comma(state_t* s) {
   int64_t value = pop_data_stack(s);
   // Store the value in the memory at the current position.
@@ -512,7 +506,6 @@ void register_builtins(state_t* state) {
   register_builtin(state, "@", 0, at);
   register_builtin(state, "!", 0, exclamation);
   register_builtin(state, "?", 0, question);
-  register_builtin(state, "CELLS", 0, cells);
   register_builtin(state, "ALLOT", 0, allot);
 
   register_builtin(state, ":", 0, colon);

@@ -11,6 +11,14 @@
 : / /mod swap drop ;
 : mod /mod drop ;
 
+\ Compute number of bytes in n cells
+: cells ( n -- n )
+  8 * ;
+
+\ Compute number of bytes in n chars
+: chars ( n -- n )
+  ;
+
 \ VARIABLE expects a name following it in the input
 \ ( "name" -- a-addr )
 : variable create 1 cells allot ;
