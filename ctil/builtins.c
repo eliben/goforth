@@ -335,6 +335,17 @@ void create(state_t* s) {
   s->here += sizeof(int64_t);
 }
 
+// Read a word from the input stream and push the value of its first character
+// onto the stack.
+void _char(state_t* s) {
+  char buf[256];
+  size_t len = get_word_case_sensitive(s->input, buf, sizeof(buf));
+  if (len == 0) {
+    die("Error: expected a word name after 'CHAR'");
+  }
+  push_data_stack(s, (int64_t)buf[0]);
+}
+
 void allot(state_t* s) {
   // Allocate space in memory for a new word.
   int64_t size = pop_data_stack(s);
@@ -373,6 +384,28 @@ void exclamation(state_t* s) {
     die("Memory access out of bounds: %ld", addr);
   }
   memcpy(&s->mem[addr], &value, sizeof(int64_t));
+}
+
+void cAt(state_t* s) {
+  int64_t addr = pop_data_stack(s);
+
+  // Read a byte from memory at the given address.
+  if (addr < 0 || addr >= sizeof(s->mem)) {
+    die("Memory access out of bounds: %ld", addr);
+  }
+  char value = s->mem[addr];
+  push_data_stack(s, (int64_t)value);
+}
+
+void cExclamation(state_t* s) {
+  int64_t addr = pop_data_stack(s);
+  int64_t value = pop_data_stack(s);
+
+  // Write a byte to memory at the given address.
+  if (addr < 0 || addr >= sizeof(s->mem)) {
+    die("Memory access out of bounds: %ld", addr);
+  }
+  s->mem[addr] = (char)value;
 }
 
 void question(state_t* s) {
@@ -497,14 +530,15 @@ void register_builtins(state_t* state) {
   register_builtin(state, "LITNUMBER", 0, litnumber);
   register_builtin(state, "LITSTRING", 0, litstring);
   register_builtin(state, "WORD", 0, word);
-
-  // TODO: CHAR shold work like CREATE in compile mode
+  register_builtin(state, "CHAR", 0, _char);
 
   register_builtin(state, "CREATE", 0, create);
 
   register_builtin(state, ",", 0, comma);
   register_builtin(state, "@", 0, at);
   register_builtin(state, "!", 0, exclamation);
+  register_builtin(state, "C@", 0, cAt);
+  register_builtin(state, "C!", 0, cExclamation);
   register_builtin(state, "?", 0, question);
   register_builtin(state, "ALLOT", 0, allot);
 

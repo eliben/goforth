@@ -19,6 +19,10 @@
 : chars ( n -- n )
   ;
 
+\ Add one char length to value on TOS
+: char+ ( n -- n )
+  1 chars + ;
+
 \ VARIABLE expects a name following it in the input
 \ ( "name" -- a-addr )
 : variable create 1 cells allot ;
