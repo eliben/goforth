@@ -450,6 +450,13 @@ void semicolon(state_t* s) {
   s->compiling = 0;
 }
 
+void immediate(state_t* s) {
+  // latest points at the start of the word we're defining. Use it to find
+  // the flag field and set the F_IMMEDIATE flag.
+  size_t flag_offset = s->latest + sizeof(int64_t);
+  s->mem[flag_offset] |= F_IMMEDIATE;
+}
+
 // Expects [addr, len] of string on the stack. Finds a dictionary entry
 // in 's' that matches the string and pushes its address onto the stack.
 // If no match is found, pushes 0.
@@ -527,11 +534,11 @@ void register_builtins(state_t* state) {
   register_builtin(state, "<", 0, _lt);
   register_builtin(state, ">", 0, _gt);
 
+  register_builtin(state, "IMMEDIATE", F_IMMEDIATE, immediate);
   register_builtin(state, "LITNUMBER", 0, litnumber);
   register_builtin(state, "LITSTRING", 0, litstring);
   register_builtin(state, "WORD", 0, word);
   register_builtin(state, "CHAR", 0, _char);
-
   register_builtin(state, "CREATE", 0, create);
 
   register_builtin(state, ",", 0, comma);
