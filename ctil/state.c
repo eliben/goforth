@@ -32,6 +32,27 @@ int64_t pop_data_stack(state_t* s) {
   return s->stack[s->stacktop--];
 }
 
+int entry_is_builtin(state_t* s, int64_t entry_offset) {
+  return (s->mem[entry_offset + 8] & F_BUILTIN) != 0;
+}
+
+int entry_is_immediate(state_t* s, int64_t entry_offset) {
+  return (s->mem[entry_offset + 8] & F_IMMEDIATE) != 0;
+}
+
+builtin_func_t entry_get_builtin_func(state_t* s, int64_t entry_offset) {
+  int64_t name_len = s->mem[entry_offset + 9];
+  int64_t addr_offset = entry_offset + 10 + name_len;
+  builtin_func_t func;
+  memcpy(&func, &s->mem[addr_offset], sizeof(func));
+  return func;
+}
+
+int64_t entry_get_code_offset(state_t* s, int64_t entry_offset) {
+  int64_t name_len = s->mem[entry_offset + 9];
+  return entry_offset + 10 + name_len;
+}
+
 void debug_dump_mem(state_t* s, uintptr_t start, uintptr_t len) {
   // Print latest, here etc.
   printf("State:\n");
@@ -56,29 +77,46 @@ void debug_dump_mem(state_t* s, uintptr_t start, uintptr_t len) {
 void debug_dump_dict(state_t* s) {
   int64_t entry_offset = s->latest;
 
+  // Dump all dictionary entries, followed the linked list of link offsets
+  // in the header.
   while (entry_offset != -1) {
     char* entry_name = &s->mem[entry_offset + 10];
-    int64_t flags = s->mem[entry_offset + 8];
-    int64_t name_len = s->mem[entry_offset + 9];
 
-    printf("Entry at 0x%lx: name='%.*s'", entry_offset, (int)name_len,
-           entry_name);
-    if (flags & F_IMMEDIATE) {
+    printf("Entry at 0x%lx: name='%s'", entry_offset, entry_name);
+    if (entry_is_immediate(s, entry_offset)) {
       printf(" (immediate)");
     }
-    if (flags & F_BUILTIN) {
+    if (entry_is_builtin(s, entry_offset)) {
       printf(" (builtin)");
     }
     printf("\n");
 
-    if (!(flags & F_BUILTIN)) {
-      int64_t code_offset = entry_offset + 10 + name_len;
+    if (!entry_is_builtin(s, entry_offset)) {
+      int64_t code_offset = entry_get_code_offset(s, entry_offset);
 
-      // Show each word until we hit the end marker (-1).
-      // TODO: handle special stuff like LITNUMBER, LITSTRING, etc.
+      // Show each word until we hit the end marker (-1). Words are typically
+      // entries for other words, but can also be special words like
+      // LITNUMBER and BRANCH.
       int64_t code_word = *(int64_t*)&s->mem[code_offset];
       while (code_word != -1) {
-        printf("%lx ", code_word);
+        printf("  %04lx:    %04lx ", code_offset, code_word);
+
+        char* word_name = &s->mem[code_word + 10];
+        printf("    %s", word_name);
+
+        if (!strcmp(word_name, "LITNUMBER")) {
+          code_offset += sizeof(int64_t);
+          // LITNUMBER is special, it has a number following it.
+          int64_t number = *(int64_t*)&s->mem[code_offset];
+          printf(" %ld", number);
+        } else if (!strcmp(word_name, "BRANCH") ||
+                   !strcmp(word_name, "0BRANCH")) {
+          code_offset += sizeof(int64_t);
+          // BRANCH and 0BRANCH have a target address following them.
+          int64_t branch_offset = *(int64_t*)&s->mem[code_offset];
+          printf(" -> %ld (%04lx)", branch_offset, code_offset + branch_offset);
+        }
+        printf("\n");
         code_offset += sizeof(int64_t);
         code_word = *(int64_t*)&s->mem[code_offset];
       }
@@ -102,27 +140,6 @@ int64_t find_word_in_dict(state_t* s, const char* word) {
   }
 
   return -1;
-}
-
-int entry_is_builtin(state_t* s, int64_t entry_offset) {
-  return (s->mem[entry_offset + 8] & F_BUILTIN) != 0;
-}
-
-int entry_is_immediate(state_t* s, int64_t entry_offset) {
-  return (s->mem[entry_offset + 8] & F_IMMEDIATE) != 0;
-}
-
-builtin_func_t entry_get_builtin_func(state_t* s, int64_t entry_offset) {
-  int64_t name_len = s->mem[entry_offset + 9];
-  int64_t addr_offset = entry_offset + 10 + name_len;
-  builtin_func_t func;
-  memcpy(&func, &s->mem[addr_offset], sizeof(func));
-  return func;
-}
-
-int64_t entry_get_code_offset(state_t* s, int64_t entry_offset) {
-  int64_t name_len = s->mem[entry_offset + 9];
-  return entry_offset + 10 + name_len;
 }
 
 void execute_word(state_t* s, int64_t entry_offset) {
