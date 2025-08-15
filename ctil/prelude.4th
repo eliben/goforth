@@ -93,3 +93,23 @@
   here -        \ calculate offset: saved HERE - HERE
   ,             \ place the offset
   ;
+
+\ BEGIN condition WHILE loop-part REPEAT compiles to:
+\   condition 0BRANCH OFFSET2 loop-part BRANCH OFFSET
+\ where OFFSET points back to the condition, and OFFSET2 points to after the
+\ whole piece of code.
+: while immediate
+  ' 0branch ,   \ place 0BRANCH
+  here          \ save location of OFFSET2 on stack
+  0 ,           \ dummy offset
+  ;
+
+: repeat immediate
+  ' branch ,    \ place BRANCH
+  swap          \ [ OFFSET2 ] [ OFFSET ]
+  here - ,      \ place HERE - OFFSET
+  dup           \ [ OFFSET2 ] [ OFFSET2 ]
+  here swap -   \ [ OFFSET2 ] [ HERE - OFFSET2]
+  swap          \ [ HERE - OFFSET2] [ OFFSET2 ]
+  ! ;
+
