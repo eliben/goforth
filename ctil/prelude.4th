@@ -15,6 +15,12 @@
 : cells ( n -- n )
   8 * ;
 
+: cell
+  1 cells ;
+
+: cell+
+  1 cells + ;
+
 \ Compute number of bytes in n chars
 : chars ( n -- n )
   ;
