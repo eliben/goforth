@@ -61,7 +61,10 @@ typedef void (*builtin_func_t)(state_t*);
 state_t* create_state();
 
 // Show the state and a memory dump.
-void show_state(state_t* s, uintptr_t start, uintptr_t len);
+void debug_dump_mem(state_t* s, uintptr_t start, uintptr_t len);
+
+// Show the dictionary entries in the state.
+void debug_dump_dict(state_t* s);
 
 // Top-level Forth interpreter consuming the input stream.
 void interpret(state_t* s);

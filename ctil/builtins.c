@@ -90,7 +90,8 @@ void dotS(state_t* s) {
 
 // .D dumps the interpreter state to stdout, for debugging.
 void dotD(state_t* s) {
-    show_state(s, 0, s->here);
+    debug_dump_mem(s, 0, s->here);
+    debug_dump_dict(s);
 }
 
 void clearstack(state_t* s) {

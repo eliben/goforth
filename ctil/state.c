@@ -32,7 +32,7 @@ int64_t pop_data_stack(state_t* s) {
   return s->stack[s->stacktop--];
 }
 
-void show_state(state_t* s, uintptr_t start, uintptr_t len) {
+void debug_dump_mem(state_t* s, uintptr_t start, uintptr_t len) {
   // Print latest, here etc.
   printf("State:\n");
   printf("  mem: %p\n", (void*)s->mem);
@@ -51,6 +51,43 @@ void show_state(state_t* s, uintptr_t start, uintptr_t len) {
     printf("%02x ", (unsigned char)s->mem[i]);
   }
   printf("\n");
+}
+
+void debug_dump_dict(state_t* s) {
+  int64_t entry_offset = s->latest;
+
+  while (entry_offset != -1) {
+    char* entry_name = &s->mem[entry_offset + 10];
+    int64_t flags = s->mem[entry_offset + 8];
+    int64_t name_len = s->mem[entry_offset + 9];
+
+    printf("Entry at 0x%lx: name='%.*s'", entry_offset, (int)name_len,
+           entry_name);
+    if (flags & F_IMMEDIATE) {
+      printf(" (immediate)");
+    }
+    if (flags & F_BUILTIN) {
+      printf(" (builtin)");
+    }
+    printf("\n");
+
+    if (!(flags & F_BUILTIN)) {
+      int64_t code_offset = entry_offset + 10 + name_len;
+
+      // Show each word until we hit the end marker (-1).
+      // TODO: handle special stuff like LITNUMBER, LITSTRING, etc.
+      int64_t code_word = *(int64_t*)&s->mem[code_offset];
+      while (code_word != -1) {
+        printf("%lx ", code_word);
+        code_offset += sizeof(int64_t);
+        code_word = *(int64_t*)&s->mem[code_offset];
+      }
+      printf("\n");
+    }
+
+    printf("\n");
+    entry_offset = *(int64_t*)&s->mem[entry_offset];
+  }
 }
 
 int64_t find_word_in_dict(state_t* s, const char* word) {
