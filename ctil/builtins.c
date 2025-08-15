@@ -356,13 +356,6 @@ void allot(state_t* s) {
   s->here += size;
 }
 
-void comma(state_t* s) {
-  int64_t value = pop_data_stack(s);
-  // Store the value in the memory at the current position.
-  memcpy(&s->mem[s->here], &value, sizeof(int64_t));
-  s->here += sizeof(int64_t);
-}
-
 void at(state_t* s) {
   int64_t addr = pop_data_stack(s);
 
@@ -450,38 +443,23 @@ void semicolon(state_t* s) {
   s->compiling = 0;
 }
 
+void tick(state_t* s) {
+  s->pc += sizeof(int64_t);
+  push_data_stack(s, *(int64_t*)&s->mem[s->pc]);
+}
+
+void comma(state_t* s) {
+  int64_t value = pop_data_stack(s);
+  memcpy(&s->mem[s->here], &value, sizeof(int64_t));
+  s->here += sizeof(int64_t);
+}
+
 void immediate(state_t* s) {
   // latest points at the start of the word we're defining. Use it to find
   // the flag field and set the F_IMMEDIATE flag.
   size_t flag_offset = s->latest + sizeof(int64_t);
   s->mem[flag_offset] |= F_IMMEDIATE;
 }
-
-// Expects [addr, len] of string on the stack. Finds a dictionary entry
-// in 's' that matches the string and pushes its address onto the stack.
-// If no match is found, pushes 0.
-// void find(state_t* s) {
-//   assert(s->stacktop >= 1);
-//   int64_t slen = s->stack[s->stacktop--];
-//   int64_t saddr = s->stack[s->stacktop--];
-
-//   // Walking back the linked list of entries starting from latest.
-//   int64_t entry_offset = s->latest;
-//   while (entry_offset != -1) {
-//     char* entry_name = &s->mem[entry_offset + 10];
-//     if (strcmp(entry_name, (char*)saddr) == 0) {
-//       // Found a match, push the address of the entry.
-//       s->stacktop++;
-//       s->stack[s->stacktop] = entry_offset;
-//       return;
-//     }
-//     entry_offset = *(int64_t*)&s->mem[entry_offset];
-//   }
-
-//   // No match found, push 0.
-//   s->stacktop++;
-//   s->stack[s->stacktop] = 0;
-// }
 
 // Create a new dictionary entry for a built-in function. The F_BUILTIN flag
 // is automatically set for all built-ins; the flags parameter can be used
@@ -513,7 +491,6 @@ void register_builtins(state_t* state) {
   register_builtin(state, "EMIT", 0, emit);
   register_builtin(state, "TYPE", 0, type);
   register_builtin(state, "KEY", 0, key);
-  //   register_builtin(state, "FIND", 0, find);
   register_builtin(state, "DROP", 0, drop);
   register_builtin(state, "SWAP", 0, swap);
   register_builtin(state, "DUP", 0, dup);
@@ -535,6 +512,8 @@ void register_builtins(state_t* state) {
   register_builtin(state, ">", 0, _gt);
 
   register_builtin(state, "IMMEDIATE", F_IMMEDIATE, immediate);
+  register_builtin(state, "'", 0, tick);
+  register_builtin(state, ",", 0, comma);
   register_builtin(state, "LITNUMBER", 0, litnumber);
   register_builtin(state, "LITSTRING", 0, litstring);
   register_builtin(state, "WORD", 0, word);
