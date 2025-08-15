@@ -11,6 +11,12 @@
 : / /mod swap drop ;
 : mod /mod drop ;
 
+: 1+
+  1 + ;
+
+: 1-
+  1 - ;
+
 \ Compute number of bytes in n cells
 : cells ( n -- n )
   8 * ;

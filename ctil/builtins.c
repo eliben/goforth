@@ -9,6 +9,8 @@
 #include "die.h"
 #include "input.h"
 
+// TODO: implement DO...LOOP, but first implement BEGIN...REPEAT loops
+
 // TODO: once more machinery is in place, try moving as much as possible into
 // the prelude.
 
