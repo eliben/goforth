@@ -39,6 +39,7 @@ var supportedTests = []string{
 	"cells.4th",
 	"charbuf.4th",
 	"comments.4th",
+	"constant.4th",
 	"create.4th",
 	"dotquote-interpret.4th",
 	"dotquote-in-word.4th",

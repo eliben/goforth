@@ -331,6 +331,46 @@ void create(state_t* s) {
   s->here += sizeof(int64_t);
 }
 
+// constant reads the next word from the input stream and creates a new
+// dictionary entry for it. The word contains a LITNUMBER <value> in it,
+// where <value> is the value of the constant.
+void constant(state_t* s) {
+  // Create a new dictionary entry for a word.
+  char buf[256];
+  size_t len = get_word(s->input, buf, sizeof(buf));
+  if (len == 0) {
+    die("Error: expected a word name after 'CONSTANT'");
+  }
+
+  // Build a new dictionary entry.
+  memcpy(&s->mem[s->here], &s->latest, sizeof(int64_t));
+  s->latest = s->here;
+  s->here += sizeof(int64_t);
+  s->mem[s->here++] = 0;
+
+  uint8_t name_len = align_name_len((uint8_t)len);
+  s->mem[s->here++] = name_len;
+  strncpy(&s->mem[s->here], buf, len);
+  s->mem[s->here + len] = '\0';
+  s->here += name_len;
+
+  // We emit a word that has LITNUMBER <value> in it; the <value> is the
+  // value of the constant.
+  int64_t litnumber_offset = find_word_in_dict(s, "LITNUMBER");
+  assert(litnumber_offset != -1);
+
+  int64_t value = pop_data_stack(s);
+  memcpy(&s->mem[s->here], &litnumber_offset, sizeof(int64_t));
+  s->here += sizeof(int64_t);
+
+  memcpy(&s->mem[s->here], &value, sizeof(int64_t));
+  s->here += sizeof(int64_t);
+
+  int64_t end_marker = -1;
+  memcpy(&s->mem[s->here], &end_marker, sizeof(int64_t));
+  s->here += sizeof(int64_t);
+}
+
 // Read a word from the input stream and push the value of its first character
 // onto the stack.
 void _char(state_t* s) {
@@ -523,6 +563,7 @@ void register_builtins(state_t* state) {
 
   register_builtin(state, "CHAR", 0, _char);
   register_builtin(state, "CREATE", 0, create);
+  register_builtin(state, "CONSTANT", 0, constant);
 
   register_builtin(state, ",", 0, comma);
   register_builtin(state, "@", 0, at);
