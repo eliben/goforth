@@ -80,4 +80,16 @@
   here swap -   \ [ OFFSET2 ] [ saved OFFSET ] [ HERE - saved OFFSET ] --
   swap          \ [ OFFSET2 ] [ HERE - saved OFFSET] [ saved OFFSET ] --
   ! ;
-  
+
+\ BEGIN ... UNTIL compiles to:
+\   loop-part condition 0BRANCH OFFSET
+\ where OFFSET points back to loop-part.
+: begin immediate
+  here          \ save HERE address on stack
+  ;
+
+: until immediate
+  ' 0branch ,   \ place 0BRANCH
+  here -        \ calculate offset: saved HERE - HERE
+  ,             \ place the offset
+  ;
