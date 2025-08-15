@@ -88,6 +88,11 @@ void dotS(state_t* s) {
   }
 }
 
+// .D dumps the interpreter state to stdout, for debugging.
+void dotD(state_t* s) {
+    show_state(s, 0, s->here);
+}
+
 void clearstack(state_t* s) {
   s->stacktop = -1;
 }
@@ -478,6 +483,7 @@ void register_builtins(state_t* state) {
   register_builtin(state, ".", 0, dot);
   register_builtin(state, ".\"", F_IMMEDIATE, dotQuote);
   register_builtin(state, ".S", 0, dotS);
+  register_builtin(state, ".D", 0, dotD);
   register_builtin(state, "CLEARSTACK", 0, clearstack);
   register_builtin(state, "EMIT", 0, emit);
   register_builtin(state, "TYPE", 0, type);
