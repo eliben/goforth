@@ -256,6 +256,26 @@ void litstring(state_t* s) {
   s->pc += len - sizeof(int64_t);
 }
 
+// Unconditional branch to pc+offset, where offset is the next word in memory.
+void branch(state_t* s) {
+  s->pc += sizeof(int64_t);
+  int64_t offset = *(int64_t*)&s->mem[s->pc];
+  s->pc += offset;
+}
+
+// Conditional branch to pc+offset, where offset is the next word in memory
+// and a flag is on TOS. The branch happens if the flag is zero.
+void branch0(state_t* s) {
+  s->pc += sizeof(int64_t);
+  int64_t offset = *(int64_t*)&s->mem[s->pc];
+  s->pc += sizeof(int64_t);
+
+  int64_t flag = pop_data_stack(s);
+  if (flag == 0) {
+    s->pc += offset;
+  }
+}
+
 // Create reads the next word from the input stream and creates a new
 // dictionary entry for it. The word contains a LITNUMBER <addr> in it,
 // where <addr> is the address of the memory location HERE points to just
@@ -488,6 +508,9 @@ void register_builtins(state_t* state) {
   register_builtin(state, "HERE", 0, here);
   register_builtin(state, "LITNUMBER", 0, litnumber);
   register_builtin(state, "LITSTRING", 0, litstring);
+  register_builtin(state, "BRANCH", 0, branch);
+  register_builtin(state, "0BRANCH", 0, branch0);
+
   register_builtin(state, "CHAR", 0, _char);
   register_builtin(state, "CREATE", 0, create);
 
