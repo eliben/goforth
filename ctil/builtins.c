@@ -256,39 +256,6 @@ void litstring(state_t* s) {
   s->pc += len - sizeof(int64_t);
 }
 
-// TODO: rewrite this using get_word
-// Read a word from the input stream into an internal buffer; push
-// [addr, len] onto the stack.
-// Note: the word is converted to uppercase while reading. If you need
-// case-sensitive reading of words, don't use this builtin.
-void word(state_t* s) {
-  static char buffer[256];
-
-  // Find beginning of the next word, skipping whitespace.
-  char c;
-  while ((c = fgetc(s->input)) != EOF) {
-    if (isspace(c)) {
-      continue;
-    }
-  }
-
-  int writeptr = 0;
-  // Read the word until whitespace or EOF.
-  while (c != EOF && !isspace(c)) {
-    assert(writeptr < sizeof(buffer) - 1);
-    buffer[writeptr++] = toupper(c);
-    c = fgetc(s->input);
-  }
-
-  if (writeptr == 0) {
-    exit(0);
-  }
-  s->stacktop++;
-  s->stack[s->stacktop] = (int64_t)buffer;
-  s->stacktop++;
-  s->stack[s->stacktop] = writeptr;
-}
-
 // Create reads the next word from the input stream and creates a new
 // dictionary entry for it. The word contains a LITNUMBER <addr> in it,
 // where <addr> is the address of the memory location HERE points to just
@@ -521,7 +488,6 @@ void register_builtins(state_t* state) {
   register_builtin(state, "HERE", 0, here);
   register_builtin(state, "LITNUMBER", 0, litnumber);
   register_builtin(state, "LITSTRING", 0, litstring);
-  register_builtin(state, "WORD", 0, word);
   register_builtin(state, "CHAR", 0, _char);
   register_builtin(state, "CREATE", 0, create);
 
