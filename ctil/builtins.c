@@ -266,7 +266,11 @@ void litstring(state_t* s) {
 void branch(state_t* s) {
   s->pc += sizeof(int64_t);
   int64_t offset = *(int64_t*)&s->mem[s->pc];
-  s->pc += offset;
+
+  // Here and in other branch words: note that word execution will always bump
+  // the pc up by sizeof(int64_t) after calling a builtin, so we need to adjust
+  // when jumping.
+  s->pc += offset - sizeof(int64_t);
 }
 
 // Conditional branch to pc+offset, where offset is the next word in memory
@@ -274,11 +278,10 @@ void branch(state_t* s) {
 void branch0(state_t* s) {
   s->pc += sizeof(int64_t);
   int64_t offset = *(int64_t*)&s->mem[s->pc];
-  s->pc += sizeof(int64_t);
 
   int64_t flag = pop_data_stack(s);
   if (flag == 0) {
-    s->pc += offset;
+    s->pc += offset - sizeof(int64_t);
   }
 }
 
