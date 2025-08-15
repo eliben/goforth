@@ -454,6 +454,10 @@ void comma(state_t* s) {
   s->here += sizeof(int64_t);
 }
 
+void here(state_t* s) {
+  push_data_stack(s, s->here);
+}
+
 void immediate(state_t* s) {
   // latest points at the start of the word we're defining. Use it to find
   // the flag field and set the F_IMMEDIATE flag.
@@ -514,6 +518,7 @@ void register_builtins(state_t* state) {
   register_builtin(state, "IMMEDIATE", F_IMMEDIATE, immediate);
   register_builtin(state, "'", 0, tick);
   register_builtin(state, ",", 0, comma);
+  register_builtin(state, "HERE", 0, here);
   register_builtin(state, "LITNUMBER", 0, litnumber);
   register_builtin(state, "LITSTRING", 0, litstring);
   register_builtin(state, "WORD", 0, word);

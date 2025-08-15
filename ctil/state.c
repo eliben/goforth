@@ -131,22 +131,24 @@ void interpret(state_t* s) {
 
     int64_t entry_offset = find_word_in_dict(s, word);
     if (entry_offset != -1) {
+      // Word is found in the dictionary.
       if (entry_is_immediate(s, entry_offset) || !s->compiling) {
         // Execute directly.
         execute_word(s, entry_offset);
       } else {
+        // Compilation mode, and the word is not immediate.
         // Store the entry offset at the 'here' offset in memory.
         memcpy(&s->mem[s->here], &entry_offset, sizeof(int64_t));
         s->here += sizeof(int64_t);
       }
     } else {
-      // Try to parse the word as a number.
+      // Word isn't found in the dictionary. Try to parse the word as a number.
       char* endptr;
       int64_t num = strtoll(word, &endptr, 10);
       if (*endptr != '\0') {
         die("Unknown word: %s\n", word);
       }
-      // Successfully parsed a number.
+
       if (s->compiling) {
         // Store the entry for LITNUMBER following the number itself in memory.
         int64_t litnumber_offset = find_word_in_dict(s, "LITNUMBER");
