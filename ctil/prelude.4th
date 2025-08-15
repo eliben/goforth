@@ -39,9 +39,13 @@
 
 \ IF, ELSE, THEN work together to compile to lower-level branches.
 \
-\ IF compiles to:
+\ IF ... THEN compiles to:
 \   0BRANCH OFFSET true-part rest
 \ where OFFSET is the offset of rest
+\
+\ IF ... ELSE ... THEN compiles to :
+\   0BRANCH OFFSET true-part BRANCH OFFSET2 false-part rest
+\ where OFFSET is the offset of false-part and OFFSET2 is the offset of rest
 : if immediate
   ' 0branch ,   \ place 0BRANCH
   here          \ save HERE address on stack
@@ -49,8 +53,19 @@
   ;
 
 : then immediate
-  dup           ( [saved HERE] [saved HERE] -- )
-  here swap -   ( [saved HERE] [HERE - saved HERE] -- )
-  swap          ( [HERE - saved HERE] [saved HERE] -- )
+  dup           ( [saved OFFSET ] [saved OFFSET -- )
+  here swap -   ( [saved OFFSET ] [HERE - saved OFFSET ] -- )
+  swap          ( [HERE - saved OFFSET ] [saved OFFSET ] -- )
   ! ;
 
+: else immediate
+  ' branch ,    \ place BRANCH
+  here          \ save HERE address on stack, now [ saved OFFSET ] [ OFFSET2 ] --
+  0 ,           \ place dummy offset in memory
+  swap          \ [ OFFSET2 ] [ saved OFFSET ] --
+                \ From here, do what THEN does to patch the 0BRANCH offset
+  dup           \ [ OFFSET2 ] [ saved OFFSET ] [ saved OFFSET ] --
+  here swap -   \ [ OFFSET2 ] [ saved OFFSET ] [ HERE - saved OFFSET ] --
+  swap          \ [ OFFSET2 ] [ HERE - saved OFFSET] [ saved OFFSET ] --
+  ! ;
+  

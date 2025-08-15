@@ -41,6 +41,7 @@ var supportedTests = []string{
 	"create.4th",
 	"dotquote-interpret.4th",
 	"dotquote-in-word.4th",
+	"ifthenelse.4th",
 	"meow5.4th",
 	"retstack.4th",
 	"stack1.4th",
