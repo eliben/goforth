@@ -553,10 +553,18 @@ void _loopimpl(state_t* s) {
 }
 
 void _i(state_t* s) {
-  // Ensure there's at least one loop frame on the return stack, then
-  // push the most receint index onto the data stack.
   assert(s->retstacktop >= 1);
   push_data_stack(s, s->retstack[s->retstacktop]);
+}
+
+void _j(state_t* s) {
+  assert(s->retstacktop >= 3);
+  push_data_stack(s, s->retstack[s->retstacktop - 2]);
+}
+
+void _k(state_t* s) {
+  assert(s->retstacktop >= 5);
+  push_data_stack(s, s->retstack[s->retstacktop - 4]);
 }
 
 // Create a new dictionary entry for a built-in function. The F_BUILTIN flag
@@ -624,6 +632,8 @@ void register_builtins(state_t* state) {
   register_builtin(state, "_DOIMPL", 0, _doimpl);
   register_builtin(state, "_LOOPIMPL", 0, _loopimpl);
   register_builtin(state, "I", 0, _i);
+  register_builtin(state, "J", 0, _j);
+  register_builtin(state, "K", 0, _k);
 
   register_builtin(state, "CHAR", 0, _char);
   register_builtin(state, "CREATE", 0, create);
