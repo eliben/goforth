@@ -494,7 +494,8 @@ void immediate(state_t* s) {
 //
 // That said, this implementation attempts to be low-level, without using
 // additional state data structures. It leverages the return stack to store
-// the loop state:
+// the loop state.
+// TODO: document this properly
 //
 void _do(state_t* s) {
   if (!s->compiling) {
@@ -544,8 +545,18 @@ void _loopimpl(state_t* s) {
     // to the start of the loop.
     s->retstack[s->retstacktop] = idx;
     s->pc += jump_offset - sizeof(int64_t);
+  } else {
+    // If the loop is done, pop the return stack to remove the loop state.
+    // Continue execution.
+    s->retstacktop -= 2;
   }
-  // ... otherwise, the loop is done and we just continue execution.
+}
+
+void _i(state_t* s) {
+  // Ensure there's at least one loop frame on the return stack, then
+  // push the most receint index onto the data stack.
+  assert(s->retstacktop >= 1);
+  push_data_stack(s, s->retstack[s->retstacktop]);
 }
 
 // Create a new dictionary entry for a built-in function. The F_BUILTIN flag
@@ -612,6 +623,7 @@ void register_builtins(state_t* state) {
   register_builtin(state, "LOOP", F_IMMEDIATE, _loop);
   register_builtin(state, "_DOIMPL", 0, _doimpl);
   register_builtin(state, "_LOOPIMPL", 0, _loopimpl);
+  register_builtin(state, "I", 0, _i);
 
   register_builtin(state, "CHAR", 0, _char);
   register_builtin(state, "CREATE", 0, create);
