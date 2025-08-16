@@ -128,6 +128,8 @@ void debug_dump_dict(state_t* s) {
   }
 }
 
+// Find a word in the dictionary by its name. Returns the offset of the
+// dictionary entry in mem if found, or -1 if not found.
 int64_t find_word_in_dict(state_t* s, const char* word) {
   int64_t entry_offset = s->latest;
 
@@ -140,6 +142,13 @@ int64_t find_word_in_dict(state_t* s, const char* word) {
   }
 
   return -1;
+}
+
+void place_dict_word(state_t* s, const char* word) {
+  int64_t word_offset = find_word_in_dict(s, word);
+  assert(word_offset != -1);
+  memcpy(&s->mem[s->here], &word_offset, sizeof(int64_t));
+  s->here += sizeof(int64_t);
 }
 
 void execute_word(state_t* s, int64_t entry_offset) {
@@ -205,11 +214,7 @@ void interpret(state_t* s) {
 
       if (s->compiling) {
         // Store the entry for LITNUMBER following the number itself in memory.
-        int64_t litnumber_offset = find_word_in_dict(s, "LITNUMBER");
-        assert(litnumber_offset != -1);
-        memcpy(&s->mem[s->here], &litnumber_offset, sizeof(int64_t));
-        s->here += sizeof(int64_t);
-
+        place_dict_word(s, "LITNUMBER");
         memcpy(&s->mem[s->here], &num, sizeof(int64_t));
         s->here += sizeof(int64_t);
       } else {

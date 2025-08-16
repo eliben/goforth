@@ -69,9 +69,8 @@ void debug_dump_dict(state_t* s);
 // Top-level Forth interpreter consuming the input stream.
 void interpret(state_t* s);
 
-// Find a word in the dictionary by its name. Returns the offset of the
-// dictionary entry in mem if found, or -1 if not found.
-int64_t find_word_in_dict(state_t* s, const char* word);
+// Place a dictionary word address at the current 'here' offset.
+void place_dict_word(state_t* s, const char* word);
 
 // Pushes value onto the data stack; asserts that the stack is not full.
 void push_data_stack(state_t* s, int64_t value);

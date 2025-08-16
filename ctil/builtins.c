@@ -63,20 +63,13 @@ void dotQuote(state_t* s) {
     //
     // The string is 0-terminated, but <str length> is aligned to 8 bytes
     // to it can be efficiently skipped.
-    int64_t litstring_offset = find_word_in_dict(s, "LITSTRING");
-    assert(litstring_offset != -1);
-    int64_t type_offset = find_word_in_dict(s, "TYPE");
-    assert(type_offset != -1);
-
-    memcpy(&s->mem[s->here], &litstring_offset, sizeof(int64_t));
-    s->here += sizeof(int64_t);
+    place_dict_word(s, "LITSTRING");
     int64_t str_len = align_name_len((uint8_t)len);
     memcpy(&s->mem[s->here], &str_len, sizeof(int64_t));
     s->here += sizeof(int64_t);
     memcpy(&s->mem[s->here], buf, len);
     s->here += str_len;
-    memcpy(&s->mem[s->here], &type_offset, sizeof(int64_t));
-    s->here += sizeof(int64_t);
+    place_dict_word(s, "TYPE");
   } else {
     fprintf(s->output, "%s", buf);
   }
@@ -319,11 +312,7 @@ void create(state_t* s) {
 
   // We emit a word that has LITNUMBER <addr> in it; the <addr> points to
   // the here following this definition in memory.
-  int64_t litnumber_offset = find_word_in_dict(s, "LITNUMBER");
-  assert(litnumber_offset != -1);
-  memcpy(&s->mem[s->here], &litnumber_offset, sizeof(int64_t));
-  s->here += sizeof(int64_t);
-
+  place_dict_word(s, "LITNUMBER");
   int64_t store_offset = s->here + 2 * sizeof(int64_t);
   memcpy(&s->mem[s->here], &store_offset, sizeof(int64_t));
   s->here += sizeof(int64_t);
@@ -358,13 +347,9 @@ void constant(state_t* s) {
 
   // We emit a word that has LITNUMBER <value> in it; the <value> is the
   // value of the constant.
-  int64_t litnumber_offset = find_word_in_dict(s, "LITNUMBER");
-  assert(litnumber_offset != -1);
+  place_dict_word(s, "LITNUMBER");
 
   int64_t value = pop_data_stack(s);
-  memcpy(&s->mem[s->here], &litnumber_offset, sizeof(int64_t));
-  s->here += sizeof(int64_t);
-
   memcpy(&s->mem[s->here], &value, sizeof(int64_t));
   s->here += sizeof(int64_t);
 
