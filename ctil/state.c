@@ -109,10 +109,18 @@ void debug_dump_dict(state_t* s) {
           // LITNUMBER is special, it has a number following it.
           int64_t number = *(int64_t*)&s->mem[code_offset];
           printf(" %ld", number);
-        } else if (!strcmp(word_name, "BRANCH") ||
-                   !strcmp(word_name, "0BRANCH")) {
+        } else if (!strcmp(word_name, "LITSTRING")) {
           code_offset += sizeof(int64_t);
-          // BRANCH and 0BRANCH have a target address following them.
+          // LITSTRING has a string length and the string itself following it.
+          int64_t str_len = *(int64_t*)&s->mem[code_offset];
+          code_offset += sizeof(int64_t);
+          char* str = &s->mem[code_offset];
+          printf(" '%.*s'", (int)str_len, str);
+          code_offset += str_len;
+        } else if (!strcmp(word_name, "BRANCH") ||
+                   !strcmp(word_name, "0BRANCH") ||
+                   !strcmp(word_name, "_LOOPIMPL")) {
+          code_offset += sizeof(int64_t);
           int64_t branch_offset = *(int64_t*)&s->mem[code_offset];
           printf(" -> %ld (%04lx)", branch_offset, code_offset + branch_offset);
         }

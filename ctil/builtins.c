@@ -488,6 +488,66 @@ void immediate(state_t* s) {
   s->mem[flag_offset] |= F_IMMEDIATE;
 }
 
+// DO...LOOP is implemented with built-ins, because they are notoriously
+// tricky to implement in Forth itself, including all the proper breaking
+// out with LEAVE and so on.
+//
+// That said, this implementation attempts to be low-level, without using
+// additional state data structures. It leverages the return stack to store
+// the loop state:
+//
+void _do(state_t* s) {
+  if (!s->compiling) {
+    die("Error: DO can only be used in compiling mode");
+  }
+
+  // Emit a call to _DOIMPL and save the HERE following it on the stack - we'll
+  // need it when compiling the LOOP word.
+  place_dict_word(s, "_DOIMPL");
+  push_data_stack(s, s->here);
+}
+
+void _loop(state_t* s) {
+  if (!s->compiling) {
+    die("Error: LOOP can only be used in compiling mode");
+  }
+
+  // Emit a call to _LOOPIMPL and use the HERE saved on the stack to calculate
+  // and place the offset immediately following the _LOOPIMPL call.
+  place_dict_word(s, "_LOOPIMPL");
+  int64_t offset = pop_data_stack(s) - s->here;
+  memcpy(&s->mem[s->here], &offset, sizeof(int64_t));
+  s->here += sizeof(int64_t);
+}
+
+void _doimpl(state_t* s) {
+  // _DOIMPL finds [ limit idx ] on TOS. It saves them on the return stack
+  // in the same order.
+  int64_t idx = pop_data_stack(s);
+  int64_t limit = pop_data_stack(s);
+  s->retstacktop += 2;
+  s->retstack[s->retstacktop] = idx;
+  s->retstack[s->retstacktop - 1] = limit;
+}
+
+void _loopimpl(state_t* s) {
+  assert(s->retstacktop >= 1);
+  int64_t idx = s->retstack[s->retstacktop] + 1;
+  int64_t limit = s->retstack[s->retstacktop - 1];
+
+  // The jump offset is following the _LOOPIMPL call in memory.
+  s->pc += sizeof(int64_t);
+  int64_t jump_offset = *(int64_t*)&s->mem[s->pc];
+
+  if (idx != limit) {
+    // If the loop is not done, update the new idx on return stack and jump back
+    // to the start of the loop.
+    s->retstack[s->retstacktop] = idx;
+    s->pc += jump_offset - sizeof(int64_t);
+  }
+  // ... otherwise, the loop is done and we just continue execution.
+}
+
 // Create a new dictionary entry for a built-in function. The F_BUILTIN flag
 // is automatically set for all built-ins; the flags parameter can be used
 // to specify additional flags.
@@ -547,6 +607,11 @@ void register_builtins(state_t* state) {
   register_builtin(state, "LITSTRING", 0, litstring);
   register_builtin(state, "BRANCH", 0, branch);
   register_builtin(state, "0BRANCH", 0, branch0);
+
+  register_builtin(state, "DO", F_IMMEDIATE, _do);
+  register_builtin(state, "LOOP", F_IMMEDIATE, _loop);
+  register_builtin(state, "_DOIMPL", 0, _doimpl);
+  register_builtin(state, "_LOOPIMPL", 0, _loopimpl);
 
   register_builtin(state, "CHAR", 0, _char);
   register_builtin(state, "CREATE", 0, create);
