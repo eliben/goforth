@@ -13,10 +13,13 @@
 : fib-rec ( n -- f )
   dup 2 < if else 1- dup fib-rec swap 1- fib-rec + then ;
 
-10 1 do
-  i fib-rec .
-loop cr
+: dorec
+  10 1 do
+    i fib-rec .
+  loop cr
+  ;
 
+dorec
 
 \ ---- OUT ----
 24 
