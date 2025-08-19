@@ -670,11 +670,13 @@ void _ploopimpl(state_t* s) {
   int64_t idx = s->retstack[s->retstacktop] + increment;
   int64_t limit = s->retstack[s->retstacktop - 1];
 
+  int stop = (increment < 0 && idx <= limit) || (increment > 0 && idx >= limit);
+
   // The jump offset is following the _LOOPIMPL call in memory.
   s->pc += sizeof(int64_t);
   int64_t jump_offset = *(int64_t*)&s->mem[s->pc];
 
-  if (idx < limit) {
+  if (!stop) {
     // If the loop is not done, update the new idx on return stack and jump back
     // to the start of the loop.
     s->retstack[s->retstacktop] = idx;

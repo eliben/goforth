@@ -655,8 +655,8 @@ func (it *Interpreter) do_(word string) {
 			}
 			increment := it.popDataStack()
 			loopState.index += increment
-			if loopState.index >= loopState.limit {
-				// Loop is done, exit.
+			if (increment < 0 && loopState.index <= loopState.limit) ||
+				(increment > 0 && loopState.index >= loopState.limit) {
 				return
 			}
 			it.loopStack.Push(loopState)

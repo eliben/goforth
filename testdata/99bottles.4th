@@ -30,7 +30,7 @@
   dup beer wall dup beer another beer wall cr ;
 
 : verses
-  0 swap do i verse 1 -loop ;
+  0 swap do i verse -1 +loop ;
 
 3 verses
 
