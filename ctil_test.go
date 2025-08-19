@@ -41,6 +41,7 @@ var supportedTests = []string{
 	"comments.4th",
 	"constant.4th",
 	"create.4th",
+	"doloop.4th",
 	"dotquote-interpret.4th",
 	"dotquote-in-word.4th",
 	"gcd.4th",

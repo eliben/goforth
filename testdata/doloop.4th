@@ -1,52 +1,56 @@
 : cr 10 emit ;
 
-4 1 do ." hop " loop cr
+: doloops
 
-: linf 4 1 do ." i=" i . loop cr ;
-linf
+  4 1 do ." hop " loop cr
 
-." nested test" cr
-2 0 do
-  43 40 do
-    j . i . ." -- "
-  loop
-loop cr
+  4 1 do ." i=" i . loop cr
 
-." using leave" cr
-8 1 do
-  i .
-  i 5 = if leave then
-  i 2 * .
-loop cr
-
-." using leave in nested loop" cr
-4 1 do
-  i . ." -> "
-  6 1 do
-    i 3 = if leave then
-    i .
+  ." nested test" cr
+  2 0 do
+    43 40 do
+      j . i . ." -- "
+    loop
   loop cr
-loop
 
-." +loop" cr
-10 1 do
-  i .
-2 +loop cr
+  ." using leave" cr
+  8 1 do
+    i .
+    i 5 = if leave then
+    i 2 * .
+  loop cr
 
-." ?do loop basic works" cr
-4 1 do ." hop? " loop cr
+  ." using leave in nested loop" cr
+  4 1 do
+    i . ." -> "
+    6 1 do
+      i 3 = if leave then
+      i .
+    loop cr
+  loop
 
-." do enters on start=limit" cr
-5 5 do
-  i .
-  i 5 = if leave then
-loop cr
+  ." +loop" cr
+  10 1 do
+    i .
+  2 +loop cr
 
-." ?do does not enter on start=limit" cr
-5 5 ?do
-  i .
-  i 5 = if leave then
-loop cr
+  ." ?do loop basic works" cr
+  4 1 do ." hop? " loop cr
+
+  ." do enters on start=limit" cr
+  5 5 do
+    i .
+    i 5 = if leave then
+  loop cr
+
+  ." ?do does not enter on start=limit" cr
+  5 5 ?do
+    i .
+    i 5 = if leave then
+  loop cr
+  ;
+
+doloops
 
 \ ---- OUT ----
 hop hop hop 
