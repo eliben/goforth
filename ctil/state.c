@@ -132,6 +132,7 @@ void debug_dump_dict(state_t* s) {
           code_offset += str_len;
         } else if (!strcmp(word_name, "BRANCH") ||
                    !strcmp(word_name, "0BRANCH") ||
+                   !strcmp(word_name, "_DOQIMPL") ||
                    !strcmp(word_name, "_LOOPIMPL")) {
           code_offset += sizeof(int64_t);
           int64_t branch_offset = *(int64_t*)&s->mem[code_offset];
