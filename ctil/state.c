@@ -135,7 +135,8 @@ void debug_dump_dict(state_t* s) {
                    !strcmp(word_name, "0BRANCH") ||
                    !strcmp(word_name, "_DOQIMPL") ||
                    !strcmp(word_name, "_LEAVEIMPL") ||
-                   !strcmp(word_name, "_LOOPIMPL")) {
+                   !strcmp(word_name, "_LOOPIMPL") ||
+                   !strcmp(word_name, "_PLOOPIMPL")) {
           code_offset += sizeof(int64_t);
           int64_t branch_offset = *(int64_t*)&s->mem[code_offset];
           printf(" -> %ld (%04lx)", branch_offset, code_offset + branch_offset);

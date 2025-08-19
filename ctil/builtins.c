@@ -561,6 +561,38 @@ void _loop(state_t* s) {
   }
 }
 
+// TODO: refactor to avoid duplication: this should be one functio with
+// _loop and they should have a way to check the actual builtin name
+void _ploop(state_t* s) {
+  if (!s->compiling) {
+    die("Error: +LOOP can only be used in compiling mode");
+  }
+
+  place_dict_word(s, "_PLOOPIMPL");
+
+  // The loop entry at the top of the loop stack applies to this loop. It
+  // contains the start offset of the loop, which we use to calculate the
+  // loop back-edge.
+  //
+  // It also contains a list of backpatch offsets, which we use to update
+  // with the location following this loop.
+  loop_compile_entry_t entry = pop_loop_entry(s);
+
+  int64_t offset = entry.start_offset - s->here;
+  memcpy(&s->mem[s->here], &offset, sizeof(int64_t));
+  s->here += sizeof(int64_t);
+
+  for (int i = 0; i < entry.backpatch_count; i++) {
+    // Update the backpatch offsets with the location following this loop.
+    int64_t backpatch_offset = entry.backpatch_offsets[i];
+    if (backpatch_offset < 0 || backpatch_offset >= s->here) {
+      die("Backpatch offset out of bounds: %ld", backpatch_offset);
+    }
+    int64_t offset = s->here - backpatch_offset;
+    memcpy(&s->mem[backpatch_offset], &offset, sizeof(int64_t));
+  }
+}
+
 void _leave(state_t* s) {
   if (!s->compiling) {
     die("Error: LOOP can only be used in compiling mode");
@@ -621,6 +653,28 @@ void _loopimpl(state_t* s) {
   int64_t jump_offset = *(int64_t*)&s->mem[s->pc];
 
   if (idx != limit) {
+    // If the loop is not done, update the new idx on return stack and jump back
+    // to the start of the loop.
+    s->retstack[s->retstacktop] = idx;
+    s->pc += jump_offset - sizeof(int64_t);
+  } else {
+    // If the loop is done, pop the return stack to remove the loop state.
+    // Continue execution.
+    s->retstacktop -= 2;
+  }
+}
+
+void _ploopimpl(state_t* s) {
+  assert(s->retstacktop >= 1);
+  int64_t increment = pop_data_stack(s);
+  int64_t idx = s->retstack[s->retstacktop] + increment;
+  int64_t limit = s->retstack[s->retstacktop - 1];
+
+  // The jump offset is following the _LOOPIMPL call in memory.
+  s->pc += sizeof(int64_t);
+  int64_t jump_offset = *(int64_t*)&s->mem[s->pc];
+
+  if (idx < limit) {
     // If the loop is not done, update the new idx on return stack and jump back
     // to the start of the loop.
     s->retstack[s->retstacktop] = idx;
@@ -719,10 +773,12 @@ void register_builtins(state_t* state) {
   register_builtin(state, "DO", F_IMMEDIATE, _do);
   register_builtin(state, "?DO", F_IMMEDIATE, _doQ);
   register_builtin(state, "LOOP", F_IMMEDIATE, _loop);
+  register_builtin(state, "+LOOP", F_IMMEDIATE, _ploop);
   register_builtin(state, "LEAVE", F_IMMEDIATE, _leave);
   register_builtin(state, "_DOIMPL", 0, _doimpl);
   register_builtin(state, "_DOQIMPL", 0, _doqimpl);
   register_builtin(state, "_LOOPIMPL", 0, _loopimpl);
+  register_builtin(state, "_PLOOPIMPL", 0, _ploopimpl);
   register_builtin(state, "_LEAVEIMPL", 0, _leaveimpl);
   register_builtin(state, "I", 0, _i);
   register_builtin(state, "J", 0, _j);
