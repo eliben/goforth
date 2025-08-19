@@ -561,6 +561,24 @@ void _loop(state_t* s) {
   }
 }
 
+void _leave(state_t* s) {
+  if (!s->compiling) {
+    die("Error: LOOP can only be used in compiling mode");
+  }
+  if (s->loop_compile_stack_top < 0) {
+    die("Error: LEAVE without a matching DO");
+  }
+
+  // Place _LEAVEIMPL <offset> in memory and add a backpatch entry for the
+  // offset, so it can skip the loop at runtime.
+  place_dict_word(s, "_LEAVEIMPL");
+  loop_compile_entry_t* entry =
+      &s->loop_compile_stack[s->loop_compile_stack_top];
+  entry->backpatch_count++;
+  entry->backpatch_offsets[entry->backpatch_count - 1] = s->here;
+  s->here += sizeof(int64_t);
+}
+
 void _doimpl(state_t* s) {
   // _DOIMPL finds [ limit idx ] on TOS. It saves them on the return stack
   // in the same order.
@@ -612,6 +630,15 @@ void _loopimpl(state_t* s) {
     // Continue execution.
     s->retstacktop -= 2;
   }
+}
+
+// _LEAVEIMPL works like BRANCH, but it also pops the loop state from retstack.
+void _leaveimpl(state_t* s) {
+  s->pc += sizeof(int64_t);
+  int64_t offset = *(int64_t*)&s->mem[s->pc];
+  s->pc += offset - sizeof(int64_t);
+
+  s->retstacktop -= 2;
 }
 
 void _i(state_t* s) {
@@ -692,9 +719,11 @@ void register_builtins(state_t* state) {
   register_builtin(state, "DO", F_IMMEDIATE, _do);
   register_builtin(state, "?DO", F_IMMEDIATE, _doQ);
   register_builtin(state, "LOOP", F_IMMEDIATE, _loop);
+  register_builtin(state, "LEAVE", F_IMMEDIATE, _leave);
   register_builtin(state, "_DOIMPL", 0, _doimpl);
   register_builtin(state, "_DOQIMPL", 0, _doqimpl);
   register_builtin(state, "_LOOPIMPL", 0, _loopimpl);
+  register_builtin(state, "_LEAVEIMPL", 0, _leaveimpl);
   register_builtin(state, "I", 0, _i);
   register_builtin(state, "J", 0, _j);
   register_builtin(state, "K", 0, _k);

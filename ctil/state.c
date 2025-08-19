@@ -16,6 +16,7 @@ state_t* create_state() {
   s->stacktop = -1;
   s->pc = 0;
   s->retstacktop = -1;
+  s->loop_compile_stack_top = -1;
   s->compiling = 0;
   s->output = stdout;
   return s;
@@ -133,6 +134,7 @@ void debug_dump_dict(state_t* s) {
         } else if (!strcmp(word_name, "BRANCH") ||
                    !strcmp(word_name, "0BRANCH") ||
                    !strcmp(word_name, "_DOQIMPL") ||
+                   !strcmp(word_name, "_LEAVEIMPL") ||
                    !strcmp(word_name, "_LOOPIMPL")) {
           code_offset += sizeof(int64_t);
           int64_t branch_offset = *(int64_t*)&s->mem[code_offset];
