@@ -32,6 +32,19 @@ int64_t pop_data_stack(state_t* s) {
   return s->stack[s->stacktop--];
 }
 
+size_t push_new_loop_entry(state_t* s, int64_t start_offset) {
+  assert(s->loop_compile_stack_top < MAX_NESTED_LOOPS - 1);
+  s->loop_compile_stack_top++;
+  s->loop_compile_stack[s->loop_compile_stack_top].backpatch_count = 0;
+  s->loop_compile_stack[s->loop_compile_stack_top].start_offset = start_offset;
+  return s->loop_compile_stack_top;
+}
+
+loop_compile_entry_t pop_loop_entry(state_t* s) {
+  assert(s->loop_compile_stack_top >= 0);
+  return s->loop_compile_stack[s->loop_compile_stack_top--];
+}
+
 int entry_is_builtin(state_t* s, int64_t entry_offset) {
   return (s->mem[entry_offset + 8] & F_BUILTIN) != 0;
 }

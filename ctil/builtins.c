@@ -491,12 +491,6 @@ void immediate(state_t* s) {
 // DO...LOOP is implemented with built-ins, because they are notoriously
 // tricky to implement in Forth itself, including all the proper breaking
 // out with LEAVE and so on.
-//
-// That said, this implementation attempts to be low-level, without using
-// additional state data structures. It leverages the return stack to store
-// the loop state.
-// TODO: document this properly
-//
 void _do(state_t* s) {
   if (!s->compiling) {
     die("Error: DO can only be used in compiling mode");
@@ -505,7 +499,26 @@ void _do(state_t* s) {
   // Emit a call to _DOIMPL and save the HERE following it on the stack - we'll
   // need it when compiling the LOOP word.
   place_dict_word(s, "_DOIMPL");
-  push_data_stack(s, s->here);
+  push_new_loop_entry(s, s->here);
+}
+
+// ?DO is similar to DO, but it checks the limit and only enters the loop
+// if the limit != current index.
+// For this to work, we need to be able to skip the loop body at runtime,
+// and we only only the address of "after the loop" when we compiler the
+// LOOP word.
+void _doQ(state_t* s) {
+  if (!s->compiling) {
+    die("Error: ?DO can only be used in compiling mode");
+  }
+
+  // Place _DOQIMPL <offset> in memory. <offset> will be back-patched when
+  // LOOP is compiled. TODO explain offset.
+  place_dict_word(s, "_DOQIMPL");
+  size_t idx = push_new_loop_entry(s, s->here + sizeof(int64_t));
+  s->loop_compile_stack[idx].backpatch_count = 1;
+  s->loop_compile_stack[idx].backpatch_offsets[0] = s->here;
+  s->here += sizeof(int64_t);
 }
 
 void _loop(state_t* s) {
@@ -516,7 +529,14 @@ void _loop(state_t* s) {
   // Emit a call to _LOOPIMPL and use the HERE saved on the stack to calculate
   // and place the offset immediately following the _LOOPIMPL call.
   place_dict_word(s, "_LOOPIMPL");
-  int64_t offset = pop_data_stack(s) - s->here;
+
+  // The loop entry at the top of the loop stack applies to this loop. It
+  // contains the start offset of the loop, which we use to calculate the
+  // where to jum back from the loop.
+  // TODO: also
+  loop_compile_entry_t entry = pop_loop_entry(s);
+
+  int64_t offset = entry.start_offset - s->here;
   memcpy(&s->mem[s->here], &offset, sizeof(int64_t));
   s->here += sizeof(int64_t);
 }
@@ -529,6 +549,19 @@ void _doimpl(state_t* s) {
   s->retstacktop += 2;
   s->retstack[s->retstacktop] = idx;
   s->retstack[s->retstacktop - 1] = limit;
+}
+
+void _doqimpl(state_t* s) {
+  // _DOQIMPL finds [ limit idx ] on TOS. If limit == idx, it does not enter
+  // the loop.
+  //   It saves them on the return stack
+  // in the same order
+  int64_t idx = pop_data_stack(s);
+  int64_t limit = pop_data_stack(s);
+  s->retstacktop += 3;
+  s->retstack[s->retstacktop] = idx;
+  s->retstack[s->retstacktop - 1] = limit;
+  s->retstack[s->retstacktop - 2] = 1; // Flag for ?DO
 }
 
 void _loopimpl(state_t* s) {

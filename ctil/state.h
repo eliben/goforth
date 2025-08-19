@@ -4,6 +4,16 @@
 #include <stdint.h>
 #include <stdio.h>
 
+#define MAX_NESTED_LOOPS 16
+#define MAX_COMPILE_BACKPATCHES 16
+
+typedef struct {
+  int64_t start_offset;
+
+  int64_t backpatch_offsets[MAX_COMPILE_BACKPATCHES];
+  int backpatch_count;
+} loop_compile_entry_t;
+
 typedef struct {
   char mem[64 * 1024];
 
@@ -26,6 +36,10 @@ typedef struct {
   // Forth return stack, and a pointer to its top item.
   int64_t retstack[64 * 1024];
   int64_t retstacktop;
+
+  // TODO: describe this
+  loop_compile_entry_t loop_compile_stack[MAX_NESTED_LOOPS];
+  int loop_compile_stack_top;
 
   // Input and output streams.
   FILE* input;
@@ -77,5 +91,12 @@ void push_data_stack(state_t* s, int64_t value);
 
 // Pops a value from the data stack; asserts that the stack is not empty.
 int64_t pop_data_stack(state_t* s);
+
+// Pushes a new loop entry item onto the stack, initialized with 0 backpatches.
+// Returns its index.
+size_t push_new_loop_entry(state_t* s, int64_t start_offset);
+
+// Pops a value from the loop entry stack.
+loop_compile_entry_t pop_loop_entry(state_t* s);
 
 #endif // STATE_H
