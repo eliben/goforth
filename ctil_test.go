@@ -45,6 +45,7 @@ var supportedTests = []string{
 	"doloop.4th",
 	"dotquote-interpret.4th",
 	"dotquote-in-word.4th",
+	"fizzbuzz.4th",
 	"gcd.4th",
 	"ifthenelse.4th",
 	"meow5.4th",

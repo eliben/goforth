@@ -205,6 +205,26 @@ void mul(state_t* s) {
   push_data_stack(s, b * a);
 }
 
+void _and(state_t* s) {
+  assert(s->stacktop >= 1);
+  int64_t a = pop_data_stack(s);
+  int64_t b = pop_data_stack(s);
+  push_data_stack(s, b & a);
+}
+
+void _or(state_t* s) {
+  assert(s->stacktop >= 1);
+  int64_t a = pop_data_stack(s);
+  int64_t b = pop_data_stack(s);
+  push_data_stack(s, b | a);
+}
+
+void invert(state_t* s) {
+  assert(s->stacktop >= 0);
+  int64_t a = pop_data_stack(s);
+  push_data_stack(s, ~a);
+}
+
 void _equals(state_t* s) {
   assert(s->stacktop >= 1);
   int64_t a = pop_data_stack(s);
@@ -756,6 +776,9 @@ void register_builtins(state_t* state) {
   register_builtin(state, "+", 0, plus);
   register_builtin(state, "-", 0, minus);
   register_builtin(state, "*", 0, mul);
+  register_builtin(state, "AND", 0, _and);
+  register_builtin(state, "OR", 0, _or);
+  register_builtin(state, "INVERT", 0, invert);
 
   register_builtin(state, "/MOD", 0, divmod);
   register_builtin(state, "=", 0, _equals);
