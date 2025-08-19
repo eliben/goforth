@@ -5,7 +5,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"slices"
 	"strings"
 	"testing"
 )
@@ -32,34 +31,6 @@ func ensureCtilBinaryExists(t *testing.T) {
 	}
 }
 
-// slice of supported tests out of those that don't start with "ctil-".
-var supportedTests = []string{
-	"99bottles.4th",
-	"arith1.4th",
-	"array-alloc.4th",
-	"cells.4th",
-	"charbuf.4th",
-	"comments.4th",
-	"constant.4th",
-	"create.4th",
-	"doloop.4th",
-	"dotquote-interpret.4th",
-	"dotquote-in-word.4th",
-	"fizzbuzz.4th",
-	"gcd.4th",
-	"ifthenelse.4th",
-	"meow5.4th",
-	"nestedifthenelse.4th",
-	"rectangle.4th",
-	"retstack.4th",
-	"stack1.4th",
-	"stack2.4th",
-	"stack-show.4th",
-	"variable.4th",
-	"word-def1.4th",
-	"word-def2.4th",
-}
-
 func TestCtilForthFiles(t *testing.T) {
 	ensureCtilBinaryExists(t)
 	testDir := "testdata"
@@ -70,9 +41,6 @@ func TestCtilForthFiles(t *testing.T) {
 
 	for _, file := range files {
 		if file.IsDir() || !strings.HasSuffix(file.Name(), ".4th") {
-			continue
-		}
-		if !strings.HasPrefix(file.Name(), "ctil-") && !slices.Contains(supportedTests, file.Name()) {
 			continue
 		}
 		t.Run(file.Name(), func(t *testing.T) {

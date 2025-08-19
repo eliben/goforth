@@ -389,6 +389,21 @@ void _char(state_t* s) {
   push_data_stack(s, (int64_t)buf[0]);
 }
 
+// [CHAR] is immediate. It works at compile time like CHAR, but saves a
+// LITNUMBER in the entry.
+void _compchar(state_t* s) {
+  if (!s->compiling) {
+    die("Error: [CHAR] can only be used in compiling mode");
+  }
+  char c = fgetc(s->input);
+  if (c == EOF) {
+    die("Error: expected a character after '[CHAR]'");
+  }
+  place_dict_word(s, "LITNUMBER");
+  memcpy(&s->mem[s->here], &c, sizeof(char));
+  s->here += sizeof(int64_t);
+}
+
 void allot(state_t* s) {
   // Allocate space in memory for a new word.
   int64_t size = pop_data_stack(s);
@@ -810,6 +825,7 @@ void register_builtins(state_t* state) {
   register_builtin(state, "K", 0, _k);
 
   register_builtin(state, "CHAR", 0, _char);
+  register_builtin(state, "[CHAR]", F_IMMEDIATE, _compchar);
   register_builtin(state, "CREATE", 0, create);
   register_builtin(state, "CONSTANT", 0, constant);
 
