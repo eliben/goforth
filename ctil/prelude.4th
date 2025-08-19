@@ -17,6 +17,9 @@
 : 1-
   1 - ;
 
+: 0=
+  0 = ;
+
 \ Compute number of bytes in n cells
 : cells ( n -- n )
   8 * ;

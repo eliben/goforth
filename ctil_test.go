@@ -50,6 +50,7 @@ var supportedTests = []string{
 	"ifthenelse.4th",
 	"meow5.4th",
 	"nestedifthenelse.4th",
+	"rectangle.4th",
 	"retstack.4th",
 	"stack1.4th",
 	"stack2.4th",
