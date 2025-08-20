@@ -4,18 +4,29 @@
 #include <stdint.h>
 #include <stdio.h>
 
+#define MEM_SIZE (64 * 1024)
+#define STACK_SIZE (64 * 1024)
 #define MAX_NESTED_LOOPS 16
 #define MAX_COMPILE_BACKPATCHES 16
 
+// loop_compile_entry_t - a single entry in the loop compile stack.
 typedef struct {
+  // TODO terminology: use addr for absolute addresses in memory, and offset
+  // for relative offsets.
+
+  // Address of the loop body (the word following DO).
   int64_t start_offset;
 
+  // A list of backpatch addresses, which are updated when we find the loop
+  // end. The backpatches store the address of the word after the loop, used
+  // to skip the loop body by words ?DO and LEAVE.
   int64_t backpatch_offsets[MAX_COMPILE_BACKPATCHES];
   int backpatch_count;
 } loop_compile_entry_t;
 
 typedef struct {
-  char mem[64 * 1024];
+  // Forth memory where the program and the data are stored.
+  char mem[MEM_SIZE];
 
   // Offset in mem to the latest defined word.
   int64_t latest;
@@ -24,9 +35,10 @@ typedef struct {
   int64_t here;
 
   // Forth data stack, and a pointer to its top item.
-  int64_t stack[64 * 1024];
+  int64_t stack[STACK_SIZE];
   int64_t stacktop;
 
+  // Program counter: the addr where the current word is being executed.
   int64_t pc;
 
   // Compiling mode: if non-zero, the interpreter is "compiling" (defining
@@ -34,10 +46,12 @@ typedef struct {
   int compiling;
 
   // Forth return stack, and a pointer to its top item.
-  int64_t retstack[64 * 1024];
+  int64_t retstack[STACK_SIZE];
   int64_t retstacktop;
 
-  // TODO: describe this
+  // Loop compile stack, used to compile counted loops (Do...LOOP and its
+  // variants). The top of the stack points to the entry of the current loop
+  // nesting while compiling.
   loop_compile_entry_t loop_compile_stack[MAX_NESTED_LOOPS];
   int loop_compile_stack_top;
 
