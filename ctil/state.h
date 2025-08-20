@@ -11,16 +11,13 @@
 
 // loop_compile_entry_t - a single entry in the loop compile stack.
 typedef struct {
-  // TODO terminology: use addr for absolute addresses in memory, and offset
-  // for relative offsets.
-
   // Address of the loop body (the word following DO).
-  int64_t start_offset;
+  int64_t start_addr;
 
   // A list of backpatch addresses, which are updated when we find the loop
   // end. The backpatches store the address of the word after the loop, used
   // to skip the loop body by words ?DO and LEAVE.
-  int64_t backpatch_offsets[MAX_COMPILE_BACKPATCHES];
+  int64_t backpatch_addrs[MAX_COMPILE_BACKPATCHES];
   int backpatch_count;
 } loop_compile_entry_t;
 
@@ -28,10 +25,10 @@ typedef struct {
   // Forth memory where the program and the data are stored.
   char mem[MEM_SIZE];
 
-  // Offset in mem to the latest defined word.
+  // Address in mem of the latest defined word.
   int64_t latest;
 
-  // Offset in mem where the next word can be defined.
+  // Address in mem where the next word can be defined.
   int64_t here;
 
   // Forth data stack, and a pointer to its top item.
@@ -64,7 +61,7 @@ typedef struct {
 typedef void (*builtin_func_t)(state_t*);
 
 // Dictionary entry:
-// - Link offset (8 bytes)
+// - Link address (8 bytes)
 // - Flags (1 byte)
 // - Name length (1 byte)
 // - Name
@@ -97,7 +94,7 @@ void debug_dump_dict(state_t* s);
 // Top-level Forth interpreter consuming the input stream.
 void interpret(state_t* s);
 
-// Place a dictionary word address at the current 'here' offset.
+// Place a dictionary word address at the current 'here' address.
 void place_dict_word(state_t* s, const char* word);
 
 // Pushes value onto the data stack; asserts that the stack is not full.
@@ -108,7 +105,7 @@ int64_t pop_data_stack(state_t* s);
 
 // Pushes a new loop entry item onto the stack, initialized with 0 backpatches.
 // Returns its index.
-size_t push_new_loop_entry(state_t* s, int64_t start_offset);
+size_t push_new_loop_entry(state_t* s, int64_t start_addr);
 
 // Pops a value from the loop entry stack.
 loop_compile_entry_t pop_loop_entry(state_t* s);

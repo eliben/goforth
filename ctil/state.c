@@ -33,11 +33,11 @@ int64_t pop_data_stack(state_t* s) {
   return s->stack[s->stacktop--];
 }
 
-size_t push_new_loop_entry(state_t* s, int64_t start_offset) {
+size_t push_new_loop_entry(state_t* s, int64_t start_addr) {
   assert(s->loop_compile_stack_top < MAX_NESTED_LOOPS - 1);
   s->loop_compile_stack_top++;
   s->loop_compile_stack[s->loop_compile_stack_top].backpatch_count = 0;
-  s->loop_compile_stack[s->loop_compile_stack_top].start_offset = start_offset;
+  s->loop_compile_stack[s->loop_compile_stack_top].start_addr = start_addr;
   return s->loop_compile_stack_top;
 }
 
@@ -46,25 +46,25 @@ loop_compile_entry_t pop_loop_entry(state_t* s) {
   return s->loop_compile_stack[s->loop_compile_stack_top--];
 }
 
-int entry_is_builtin(state_t* s, int64_t entry_offset) {
-  return (s->mem[entry_offset + 8] & F_BUILTIN) != 0;
+int entry_is_builtin(state_t* s, int64_t entry_addr) {
+  return (s->mem[entry_addr + 8] & F_BUILTIN) != 0;
 }
 
-int entry_is_immediate(state_t* s, int64_t entry_offset) {
-  return (s->mem[entry_offset + 8] & F_IMMEDIATE) != 0;
+int entry_is_immediate(state_t* s, int64_t entry_addr) {
+  return (s->mem[entry_addr + 8] & F_IMMEDIATE) != 0;
 }
 
-builtin_func_t entry_get_builtin_func(state_t* s, int64_t entry_offset) {
-  int64_t name_len = s->mem[entry_offset + 9];
-  int64_t addr_offset = entry_offset + 10 + name_len;
+builtin_func_t entry_get_builtin_func(state_t* s, int64_t entry_addr) {
+  int64_t name_len = s->mem[entry_addr + 9];
+  int64_t code_addr = entry_addr + 10 + name_len;
   builtin_func_t func;
-  memcpy(&func, &s->mem[addr_offset], sizeof(func));
+  memcpy(&func, &s->mem[code_addr], sizeof(func));
   return func;
 }
 
-int64_t entry_get_code_offset(state_t* s, int64_t entry_offset) {
-  int64_t name_len = s->mem[entry_offset + 9];
-  return entry_offset + 10 + name_len;
+int64_t entry_get_code_addr(state_t* s, int64_t entry_addr) {
+  int64_t name_len = s->mem[entry_addr + 9];
+  return entry_addr + 10 + name_len;
 }
 
 void debug_dump_mem(state_t* s, uintptr_t start, uintptr_t len) {
@@ -89,103 +89,103 @@ void debug_dump_mem(state_t* s, uintptr_t start, uintptr_t len) {
 }
 
 void debug_dump_dict(state_t* s) {
-  int64_t entry_offset = s->latest;
+  int64_t entry_addr = s->latest;
 
-  // Dump all dictionary entries, followed the linked list of link offsets
+  // Dump all dictionary entries, followed the linked list of link addrs
   // in the header.
-  while (entry_offset != -1) {
-    char* entry_name = &s->mem[entry_offset + 10];
+  while (entry_addr != -1) {
+    char* entry_name = &s->mem[entry_addr + 10];
 
-    printf("Entry at 0x%lx: name='%s'", entry_offset, entry_name);
-    if (entry_is_immediate(s, entry_offset)) {
+    printf("Entry at 0x%lx: name='%s'", entry_addr, entry_name);
+    if (entry_is_immediate(s, entry_addr)) {
       printf(" (immediate)");
     }
-    if (entry_is_builtin(s, entry_offset)) {
+    if (entry_is_builtin(s, entry_addr)) {
       printf(" (builtin)");
     }
     printf("\n");
 
-    if (!entry_is_builtin(s, entry_offset)) {
-      int64_t code_offset = entry_get_code_offset(s, entry_offset);
+    if (!entry_is_builtin(s, entry_addr)) {
+      int64_t code_addr = entry_get_code_addr(s, entry_addr);
 
       // Show each word until we hit the end marker (-1). Words are typically
       // entries for other words, but can also be special words like
       // LITNUMBER and BRANCH.
-      int64_t code_word = *(int64_t*)&s->mem[code_offset];
+      int64_t code_word = *(int64_t*)&s->mem[code_addr];
       while (code_word != -1) {
-        printf("  %04lx:    %04lx ", code_offset, code_word);
+        printf("  %04lx:    %04lx ", code_addr, code_word);
 
         char* word_name = &s->mem[code_word + 10];
         printf("    %s", word_name);
 
         if (!strcmp(word_name, "LITNUMBER")) {
-          code_offset += sizeof(int64_t);
+          code_addr += sizeof(int64_t);
           // LITNUMBER is special, it has a number following it.
-          int64_t number = *(int64_t*)&s->mem[code_offset];
+          int64_t number = *(int64_t*)&s->mem[code_addr];
           printf(" %ld", number);
         } else if (!strcmp(word_name, "LITSTRING")) {
-          code_offset += sizeof(int64_t);
+          code_addr += sizeof(int64_t);
           // LITSTRING has a string length and the string itself following it.
-          int64_t str_len = *(int64_t*)&s->mem[code_offset];
-          code_offset += sizeof(int64_t);
-          char* str = &s->mem[code_offset];
+          int64_t str_len = *(int64_t*)&s->mem[code_addr];
+          code_addr += sizeof(int64_t);
+          char* str = &s->mem[code_addr];
           printf(" '%.*s'", (int)str_len, str);
-          code_offset += str_len;
+          code_addr += str_len;
         } else if (!strcmp(word_name, "BRANCH") ||
                    !strcmp(word_name, "0BRANCH") ||
                    !strcmp(word_name, "_DOQIMPL") ||
                    !strcmp(word_name, "_LEAVEIMPL") ||
                    !strcmp(word_name, "_LOOPIMPL") ||
                    !strcmp(word_name, "_PLOOPIMPL")) {
-          code_offset += sizeof(int64_t);
-          int64_t branch_offset = *(int64_t*)&s->mem[code_offset];
-          printf(" -> %ld (%04lx)", branch_offset, code_offset + branch_offset);
+          code_addr += sizeof(int64_t);
+          int64_t branch_offset = *(int64_t*)&s->mem[code_addr];
+          printf(" -> %ld (%04lx)", branch_offset, code_addr + branch_offset);
         }
         printf("\n");
-        code_offset += sizeof(int64_t);
-        code_word = *(int64_t*)&s->mem[code_offset];
+        code_addr += sizeof(int64_t);
+        code_word = *(int64_t*)&s->mem[code_addr];
       }
       printf("\n");
     }
 
     printf("\n");
-    entry_offset = *(int64_t*)&s->mem[entry_offset];
+    entry_addr = *(int64_t*)&s->mem[entry_addr];
   }
 }
 
-// Find a word in the dictionary by its name. Returns the offset of the
+// Find a word in the dictionary by its name. Returns the address of the
 // dictionary entry in mem if found, or -1 if not found.
 int64_t find_word_in_dict(state_t* s, const char* word) {
-  int64_t entry_offset = s->latest;
+  int64_t entry_addr = s->latest;
 
-  while (entry_offset != -1) {
-    char* entry_name = &s->mem[entry_offset + 10];
+  while (entry_addr != -1) {
+    char* entry_name = &s->mem[entry_addr + 10];
     if (strcmp(entry_name, word) == 0) {
-      return entry_offset;
+      return entry_addr;
     }
-    entry_offset = *(int64_t*)&s->mem[entry_offset];
+    entry_addr = *(int64_t*)&s->mem[entry_addr];
   }
 
   return -1;
 }
 
 void place_dict_word(state_t* s, const char* word) {
-  int64_t word_offset = find_word_in_dict(s, word);
-  assert(word_offset != -1);
-  memcpy(&s->mem[s->here], &word_offset, sizeof(int64_t));
+  int64_t word_addr = find_word_in_dict(s, word);
+  assert(word_addr != -1);
+  memcpy(&s->mem[s->here], &word_addr, sizeof(int64_t));
   s->here += sizeof(int64_t);
 }
 
-void execute_word(state_t* s, int64_t entry_offset) {
-  if (entry_is_builtin(s, entry_offset)) {
-    builtin_func_t func = entry_get_builtin_func(s, entry_offset);
+void execute_word(state_t* s, int64_t entry_addr) {
+  if (entry_is_builtin(s, entry_addr)) {
+    builtin_func_t func = entry_get_builtin_func(s, entry_addr);
     func(s);
     return;
   }
 
   // The entry is not a builtin; set pc to the first word of its code and
   // start executing.
-  s->pc = entry_get_code_offset(s, entry_offset);
+  s->pc = entry_get_code_addr(s, entry_addr);
   while (1) {
     int64_t subentry = *(int64_t*)&s->mem[s->pc];
     if (subentry == -1) {
@@ -203,7 +203,7 @@ void execute_word(state_t* s, int64_t entry_offset) {
     } else {
       s->retstacktop++;
       s->retstack[s->retstacktop] = s->pc + sizeof(int64_t);
-      s->pc = entry_get_code_offset(s, subentry);
+      s->pc = entry_get_code_addr(s, subentry);
     }
   }
 }
@@ -217,16 +217,16 @@ void interpret(state_t* s) {
       break;
     }
 
-    int64_t entry_offset = find_word_in_dict(s, word);
-    if (entry_offset != -1) {
+    int64_t entry_addr = find_word_in_dict(s, word);
+    if (entry_addr != -1) {
       // Word is found in the dictionary.
-      if (entry_is_immediate(s, entry_offset) || !s->compiling) {
+      if (entry_is_immediate(s, entry_addr) || !s->compiling) {
         // Execute directly.
-        execute_word(s, entry_offset);
+        execute_word(s, entry_addr);
       } else {
         // Compilation mode, and the word is not immediate.
-        // Store the entry offset at the 'here' offset in memory.
-        memcpy(&s->mem[s->here], &entry_offset, sizeof(int64_t));
+        // Store the entry addr at the 'here' address in memory.
+        memcpy(&s->mem[s->here], &entry_addr, sizeof(int64_t));
         s->here += sizeof(int64_t);
       }
     } else {

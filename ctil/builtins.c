@@ -331,8 +331,8 @@ void create(state_t* s) {
   // We emit a word that has LITNUMBER <addr> in it; the <addr> points to
   // the here following this definition in memory.
   place_dict_word(s, "LITNUMBER");
-  int64_t store_offset = s->here + 2 * sizeof(int64_t);
-  memcpy(&s->mem[s->here], &store_offset, sizeof(int64_t));
+  int64_t store_addr = s->here + 2 * sizeof(int64_t);
+  memcpy(&s->mem[s->here], &store_addr, sizeof(int64_t));
   s->here += sizeof(int64_t);
 
   int64_t end_marker = -1;
@@ -517,8 +517,8 @@ void here(state_t* s) {
 void immediate(state_t* s) {
   // latest points at the start of the word we're defining. Use it to find
   // the flag field and set the F_IMMEDIATE flag.
-  size_t flag_offset = s->latest + sizeof(int64_t);
-  s->mem[flag_offset] |= F_IMMEDIATE;
+  size_t flag_addr = s->latest + sizeof(int64_t);
+  s->mem[flag_addr] |= F_IMMEDIATE;
 }
 
 // DO...LOOP is implemented with built-ins, because they are notoriously
@@ -543,10 +543,10 @@ void _doQ(state_t* s) {
     die("Error: ?DO can only be used in compiling mode");
   }
 
-  // Place _DOQIMPL <offset> in memory.
+  // Place _DOQIMPL <addr> in memory.
   //
   // Add a backpatch entry to the loop compile stack, which _loop uses to
-  // update the offset such that it jumps to the end of the loop body.
+  // update the addr such that it jumps to the end of the loop body.
   // After _loop runs, this will be the memory situation:
   //
   //  _DOQIMPL <addr> <loop word1> <loop word2> _LOOPIMPL <addr> <after loop>
@@ -560,7 +560,7 @@ void _doQ(state_t* s) {
   place_dict_word(s, "_DOQIMPL");
   size_t idx = push_new_loop_entry(s, s->here + sizeof(int64_t));
   s->loop_compile_stack[idx].backpatch_count = 1;
-  s->loop_compile_stack[idx].backpatch_offsets[0] = s->here;
+  s->loop_compile_stack[idx].backpatch_addrs[0] = s->here;
   s->here += sizeof(int64_t);
 }
 
@@ -572,25 +572,25 @@ void _loop(state_t* s) {
   place_dict_word(s, "_LOOPIMPL");
 
   // The loop entry at the top of the loop stack applies to this loop. It
-  // contains the start offset of the loop, which we use to calculate the
+  // contains the start address of the loop, which we use to calculate the
   // loop back-edge.
   //
-  // It also contains a list of backpatch offsets, which we use to update
+  // It also contains a list of backpatch addresses, which we use to update
   // with the location following this loop.
   loop_compile_entry_t entry = pop_loop_entry(s);
 
-  int64_t offset = entry.start_offset - s->here;
+  int64_t offset = entry.start_addr - s->here;
   memcpy(&s->mem[s->here], &offset, sizeof(int64_t));
   s->here += sizeof(int64_t);
 
   for (int i = 0; i < entry.backpatch_count; i++) {
-    // Update the backpatch offsets with the location following this loop.
-    int64_t backpatch_offset = entry.backpatch_offsets[i];
-    if (backpatch_offset < 0 || backpatch_offset >= s->here) {
-      die("Backpatch offset out of bounds: %ld", backpatch_offset);
+    // Update the backpatch addresses with the location following this loop.
+    int64_t backpatch_addr = entry.backpatch_addrs[i];
+    if (backpatch_addr < 0 || backpatch_addr >= s->here) {
+      die("Backpatch address out of bounds: %ld", backpatch_addr);
     }
-    int64_t offset = s->here - backpatch_offset;
-    memcpy(&s->mem[backpatch_offset], &offset, sizeof(int64_t));
+    int64_t offset = s->here - backpatch_addr;
+    memcpy(&s->mem[backpatch_addr], &offset, sizeof(int64_t));
   }
 }
 
@@ -604,25 +604,25 @@ void _ploop(state_t* s) {
   place_dict_word(s, "_PLOOPIMPL");
 
   // The loop entry at the top of the loop stack applies to this loop. It
-  // contains the start offset of the loop, which we use to calculate the
+  // contains the start address of the loop, which we use to calculate the
   // loop back-edge.
   //
-  // It also contains a list of backpatch offsets, which we use to update
+  // It also contains a list of backpatch addresses, which we use to update
   // with the location following this loop.
   loop_compile_entry_t entry = pop_loop_entry(s);
 
-  int64_t offset = entry.start_offset - s->here;
+  int64_t offset = entry.start_addr - s->here;
   memcpy(&s->mem[s->here], &offset, sizeof(int64_t));
   s->here += sizeof(int64_t);
 
   for (int i = 0; i < entry.backpatch_count; i++) {
-    // Update the backpatch offsets with the location following this loop.
-    int64_t backpatch_offset = entry.backpatch_offsets[i];
-    if (backpatch_offset < 0 || backpatch_offset >= s->here) {
-      die("Backpatch offset out of bounds: %ld", backpatch_offset);
+    // Update the backpatch addresses with the location following this loop.
+    int64_t backpatch_addr = entry.backpatch_addrs[i];
+    if (backpatch_addr < 0 || backpatch_addr >= s->here) {
+      die("Backpatch address out of bounds: %ld", backpatch_addr);
     }
-    int64_t offset = s->here - backpatch_offset;
-    memcpy(&s->mem[backpatch_offset], &offset, sizeof(int64_t));
+    int64_t offset = s->here - backpatch_addr;
+    memcpy(&s->mem[backpatch_addr], &offset, sizeof(int64_t));
   }
 }
 
@@ -640,7 +640,7 @@ void _leave(state_t* s) {
   loop_compile_entry_t* entry =
       &s->loop_compile_stack[s->loop_compile_stack_top];
   entry->backpatch_count++;
-  entry->backpatch_offsets[entry->backpatch_count - 1] = s->here;
+  entry->backpatch_addrs[entry->backpatch_count - 1] = s->here;
   s->here += sizeof(int64_t);
 }
 
