@@ -9,9 +9,6 @@
 #include "die.h"
 #include "input.h"
 
-// TODO: once more machinery is in place, try moving as much as possible into
-// the prelude.
-
 // Align a name length to 8 bytes, including the null terminator.
 static uint8_t align_name_len(uint8_t len) {
   len++;
@@ -123,21 +120,6 @@ void dup(state_t* s) {
   assert(s->stacktop >= 0);
   s->stacktop++;
   s->stack[s->stacktop] = s->stack[s->stacktop - 1];
-}
-
-void dup2(state_t* s) {
-  assert(s->stacktop >= 1);
-  // [v2 v1 -- v2 v1 v2 v1]
-  int64_t v1 = s->stack[s->stacktop];
-  int64_t v2 = s->stack[s->stacktop - 1];
-
-  push_data_stack(s, v2);
-  push_data_stack(s, v1);
-}
-
-void drop2(state_t* s) {
-  pop_data_stack(s);
-  pop_data_stack(s);
 }
 
 // Pop a value from the return stack and push it onto the data stack.
@@ -287,7 +269,7 @@ void branch(state_t* s) {
 }
 
 // Conditional branch to pc+offset, where offset is the next word in memory
-// and a flag is on TOS. The branch happens if the flag is zero.
+// and a flag is on TOS. The branch happens if the flag (value on TOS) is zero.
 void branch0(state_t* s) {
   s->pc += sizeof(int64_t);
   int64_t offset = *(int64_t*)&s->mem[s->pc];
@@ -419,9 +401,7 @@ void at(state_t* s) {
   if (addr < 0 || addr >= sizeof(s->mem) - sizeof(int64_t)) {
     die("Memory access out of bounds: %ld", addr);
   }
-  int64_t value;
-  memcpy(&value, &s->mem[addr], sizeof(int64_t));
-  push_data_stack(s, value);
+  push_data_stack(s, *(int64_t*)&s->mem[addr]);
 }
 
 void exclamation(state_t* s) {
@@ -463,10 +443,10 @@ void question(state_t* s) {
   if (addr < 0 || addr >= sizeof(s->mem) - sizeof(int64_t)) {
     die("Memory access out of bounds: %ld", addr);
   }
-
   fprintf(s->output, "%ld ", *(int64_t*)&s->mem[addr]);
 }
 
+// : starts a new word definition, entering compiling mode.
 void colon(state_t* s) {
   char buf[256];
   size_t len = get_word(s->input, buf, sizeof(buf));
@@ -524,6 +504,21 @@ void immediate(state_t* s) {
 // DO...LOOP is implemented with built-ins, because they are notoriously
 // tricky to implement in Forth itself, including all the proper breaking
 // out with LEAVE and so on.
+// DO/LOOP/LEAVE etc. are compile-time built-ins. They're compiled into
+// *IMPL words like _DOIMPL, _LOOPIMPL, etc. which are using the return
+// stack to keep track of the loop state.
+//
+// The basic DO...LOOP is compiled to the following:
+//
+//  _DOIMPL <loop word1> <loop word2> _LOOPIMPL <addr>
+//              ^                                 |
+//               \-------------------------------/
+//                       (loop back-edge)
+//
+// Each LEAVE is compiled to _LEAVEIMPL <offset>, where offset is the
+// offset to skip the loop body.
+// The loop state while compiling is maintained in loop_compile_stack, to
+// support nested loops.
 void _do(state_t* s) {
   if (!s->compiling) {
     die("Error: DO can only be used in compiling mode");
@@ -594,8 +589,6 @@ void _loop(state_t* s) {
   }
 }
 
-// TODO: refactor to avoid duplication: this should be one functio with
-// _loop and they should have a way to check the actual builtin name
 void _ploop(state_t* s) {
   if (!s->compiling) {
     die("Error: +LOOP can only be used in compiling mode");
@@ -703,6 +696,8 @@ void _ploopimpl(state_t* s) {
   int64_t idx = s->retstack[s->retstacktop] + increment;
   int64_t limit = s->retstack[s->retstacktop - 1];
 
+  // The loop is done if the index crosses the limit in the direction
+  // of the increment.
   int stop = (increment < 0 && idx <= limit) || (increment > 0 && idx >= limit);
 
   // The jump offset is following the _LOOPIMPL call in memory.
@@ -780,8 +775,6 @@ void register_builtins(state_t* state) {
   register_builtin(state, "SWAP", 0, swap);
   register_builtin(state, "DUP", 0, dup);
   register_builtin(state, "OVER", 0, over);
-  register_builtin(state, "2DUP", 0, dup2);
-  register_builtin(state, "2DROP", 0, drop2);
   register_builtin(state, "R>", 0, fromR);
   register_builtin(state, ">R", 0, toR);
   register_builtin(state, "R@", 0, copyFromR);

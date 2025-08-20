@@ -20,6 +20,12 @@
 : 0=
   0 = ;
 
+: 2dup
+  over over ;
+
+: 2drop
+  drop drop ;
+
 \ Compute number of bytes in n cells
 : cells ( n -- n )
   8 * ;
