@@ -9,6 +9,9 @@ import (
 
 const delim = "\\ ---- OUT ----"
 
+// getTestFileData reads a test file and splits it into code and expected
+// output. It expects the file to contain a delimiter line with the value of
+// delim. It returns (code, expected output, error).
 func getTestFileData(filepath string) (string, string, error) {
 	content, err := os.ReadFile(filepath)
 	if err != nil {
@@ -23,6 +26,8 @@ func getTestFileData(filepath string) (string, string, error) {
 	return code, expected, nil
 }
 
+// compareExpected compares the expected and actual output strings. If they
+// differ, it logs a test error with detailed information about the mismatch.
 func compareExpected(t *testing.T, expected, actual string) {
 	expected = strings.TrimSpace(expected)
 	actual = strings.TrimSpace(actual)

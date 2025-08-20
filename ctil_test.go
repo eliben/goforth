@@ -49,8 +49,6 @@ func TestCtilForthFiles(t *testing.T) {
 				t.Fatalf("Failed to read file: %v", err)
 			}
 
-			// t.Logf("Sending code to ctil binary:\n===\n%s\n===", code)
-
 			cmd := exec.Command(
 				filepath.Join(ctilDir, ctilBinaryName),
 				"-i", filepath.Join(ctilDir, ctilPreludeName))
@@ -70,8 +68,6 @@ func TestCtilForthFiles(t *testing.T) {
 			if err != nil {
 				t.Fatalf("Failed to run ctil binary: %v\n%v", err, string(b))
 			}
-
-			// t.Logf("Ctil binary output:\n===\n%s\n===", string(b))
 
 			compareExpected(t, expected, string(b))
 		})
