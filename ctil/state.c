@@ -176,9 +176,13 @@ void place_dict_word(state_t* s, const char* word) {
   s->here += sizeof(int64_t);
 }
 
-// Execute a Forth word. entry_addr is the address of the dictionary entry
-// for the word to execute.
-static void execute_word(state_t* s, int64_t entry_addr) {
+// Execute a toplevel Forth word. entry_addr is the address of the dictionary
+// entry for the word to execute.
+// "Toplevel" means this is not a word called from another word, but is read
+// from the input stream (either as an immediate word while compiling, or
+// as a toplevel interpreted word).
+// This function handles nested invocation of words by itself.
+static void execute_toplevel_word(state_t* s, int64_t entry_addr) {
   if (entry_is_builtin(s, entry_addr)) {
     builtin_func_t func = entry_get_builtin_func(s, entry_addr);
     func(s);
@@ -186,15 +190,12 @@ static void execute_word(state_t* s, int64_t entry_addr) {
   }
 
   // The entry is not a builtin; set pc to the first word of its code and
-  // start executing.
+  // start executing. Nested calls are handled by a combination of s->pc
+  // and the return stack.
   s->pc = entry_get_code_addr(s, entry_addr);
   while (1) {
     int64_t subentry = *(int64_t*)&s->mem[s->pc];
     if (subentry == -1) {
-      // TODO: if this function can be called recursively, we may need
-      // to adjust the check for "same level of retstack" here?
-      // TODODODO: document how compiled code is laid out in memory, with
-      // the end marker and all.
       if (s->retstacktop < 0) {
         break;
       }
@@ -230,8 +231,8 @@ void interpret(state_t* s) {
         memcpy(&s->mem[s->here], &entry_addr, sizeof(int64_t));
         s->here += sizeof(int64_t);
       } else {
-        // Othewrwise, execute the word directly.
-        execute_word(s, entry_addr);
+        // Otherwise, execute the word directly.
+        execute_toplevel_word(s, entry_addr);
       }
     } else {
       // Word isn't found in the dictionary. Try to parse it as a number.
