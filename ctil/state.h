@@ -21,6 +21,8 @@ typedef struct {
   int backpatch_count;
 } loop_compile_entry_t;
 
+// state_t - the interpreter state, containing the memory, stacks, and
+// program counter.
 typedef struct {
   // Forth memory where the program and the data are stored.
   char mem[MEM_SIZE];
@@ -69,8 +71,13 @@ typedef void (*builtin_func_t)(state_t*);
 //     until the next 8-byte boundary. This length is stored in the previous
 //     byte.
 // - Code (variable length)
+//   - For a builtin, this is the address of the C function.
+//   - For a Forth-defined word, this is a sequence of memory addresses for
+//     the words in the definition, terminated by -1.
 
+//
 // Flags for dictionary entries.
+//
 
 // F_BUILTIN: if set, the entry is a builtin function implemented in C.
 #define F_BUILTIN 0x80
@@ -91,7 +98,7 @@ void debug_dump_mem(state_t* s, uintptr_t start, uintptr_t len);
 // Show the dictionary entries in the state.
 void debug_dump_dict(state_t* s);
 
-// Top-level Forth interpreter consuming the input stream.
+// Top-level Forth interpreter consuming the entire input stream in s.
 void interpret(state_t* s);
 
 // Place a dictionary word address at the current 'here' address.

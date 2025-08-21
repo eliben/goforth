@@ -176,7 +176,9 @@ void place_dict_word(state_t* s, const char* word) {
   s->here += sizeof(int64_t);
 }
 
-void execute_word(state_t* s, int64_t entry_addr) {
+// Execute a Forth word. entry_addr is the address of the dictionary entry
+// for the word to execute.
+static void execute_word(state_t* s, int64_t entry_addr) {
   if (entry_is_builtin(s, entry_addr)) {
     builtin_func_t func = entry_get_builtin_func(s, entry_addr);
     func(s);
@@ -191,6 +193,8 @@ void execute_word(state_t* s, int64_t entry_addr) {
     if (subentry == -1) {
       // TODO: if this function can be called recursively, we may need
       // to adjust the check for "same level of retstack" here?
+      // TODODODO: document how compiled code is laid out in memory, with
+      // the end marker and all.
       if (s->retstacktop < 0) {
         break;
       }
@@ -220,17 +224,17 @@ void interpret(state_t* s) {
     int64_t entry_addr = find_word_in_dict(s, word);
     if (entry_addr != -1) {
       // Word is found in the dictionary.
-      if (entry_is_immediate(s, entry_addr) || !s->compiling) {
-        // Execute directly.
-        execute_word(s, entry_addr);
-      } else {
+      if (s->compiling && !entry_is_immediate(s, entry_addr)) {
         // Compilation mode, and the word is not immediate.
         // Store the entry addr at the 'here' address in memory.
         memcpy(&s->mem[s->here], &entry_addr, sizeof(int64_t));
         s->here += sizeof(int64_t);
+      } else {
+        // Othewrwise, execute the word directly.
+        execute_word(s, entry_addr);
       }
     } else {
-      // Word isn't found in the dictionary. Try to parse the word as a number.
+      // Word isn't found in the dictionary. Try to parse it as a number.
       char* endptr;
       int64_t num = strtoll(word, &endptr, 10);
       if (*endptr != '\0') {
