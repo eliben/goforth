@@ -11,7 +11,7 @@ This repository contains two implementations of the Forth programming language.
 The first is just called `goforth` and lives in the root directory of this
 repository. The second is called `ctil` and lives in the `ctil` directory.
 
-## goforth - Go implementation of Forth
+## goforth: Go implementation of Forth
 
 `goforth` is implemented in Go and takes an unusual approach to Forth. It acts
 as a source-level interpreter. There is no intermediate representation of
@@ -30,12 +30,17 @@ Forth itself using lower-level primitives.
 To run `goforth` on a piece of Forth code, simply execute:
 
 ```
-$ go run . < forth-file
+$ go run . < testdata/fizzbuzz.4th
+
+... or ...
+$ go build
+$ ./goforth < testdata/fizzbuzz.4th
 ```
 
-(or `go build` first, then run `goforth < forth-file`).
+There are many small Forth programs in the `testdata` directory that can serve
+as examples to run and play with.
 
-## ctil - lower-level C implementation
+## ctil: lower-level C implementation
 
 `ctil` (stands for "C [Thread Interpretive Language](https://en.wikipedia.org/wiki/Threaded_code)) is a C implementation of Forth. It takes a much more traditional
 Forth implementation approach, where the Forth code is actually compiled into
@@ -60,7 +65,7 @@ an implementation of several Forth primitives in Forth itself. If you're still
 in the `ctil` directory, run:
 
 ```
-$ ./ctil -i prelude.4th < forth-file
+$ ./ctil -i prelude.4th < ../testdata/fizzbuzz.4th
 ```
 
 ## Testing
