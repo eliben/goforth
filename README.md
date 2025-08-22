@@ -20,6 +20,49 @@ is encountered, `goforth` links it to the offset in the input string where
 the word is defined, and when this word is called the interpreter just
 processes its string definition word by word.
 
+This is an interesting experiment but clearly not the best way to implement
+Forth; in addition to the performance implication, it makes implementing things
+like loops quite difficult (having to carefully keep track of nested constructs
+like `IF` to enable proper `LEAVE`), and it doesn't allow of Forth's famous
+self-extension mechanisms - for example, implementing `IF...THEN...ELSE` in
+Forth itself using lower-level primitives.
+
+To run `goforth` on a piece of Forth code, simply execute:
+
+```shell
+$ go run . < forth-file
+```
+
+(or `go build` first, then run `goforth < forth-file`).
+
+## ctil - lower-level C implementation
+
+`ctil` (stands for "C [Thread Interpretive Language](https://en.wikipedia.org/wiki/Threaded_code)) is a C implementation of Forth. It takes a much more traditional
+Forth implementation approach, where the Forth code is actually compiled into
+linked dictionary entries, and word invocations are replaced with the addresses
+of the dictionary entries for these words.
+
+`ctil` still deviates from the Forth convention of Assembly language
+implementations, but it should be able to support pretty much everything.
+As an example, take a look at `ctil/prelude.4th` - it contains implementations
+of `IF...THEN...ELSE` conditions and `BEGIN...REPEAT` loops in Forth itself.
+
+To run `ctil` on a piece of Forth code, first build `ctil`. A Makefile is
+included - `ctil` has no external dependencies other than a standard C compiler.
+
+```shell
+$ cd ctil
+$ make
+```
+
+To run realistic Forth programs, the "prelude" has to be included first - it's
+an implementation of several Forth primitives in Forth itself. If you're still
+in the `ctil` directory, run:
+
+```
+$ ./ctil -i prelude.4th < forth-file
+```
+
 ## Testing
 
 goforth has an extensive automated test harness. Each test consists of a file
