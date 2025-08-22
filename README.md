@@ -13,7 +13,7 @@ repository. The second is called `ctil` and lives in the `ctil` directory.
 
 ## goforth - Go implementation of Forth
 
-`goforth` is implemented in Go takes an unusual approach to Forth. It acts
+`goforth` is implemented in Go and takes an unusual approach to Forth. It acts
 as a source-level interpreter. There is no intermediate representation of
 the program - the source string is interpreted directly. When a word definition
 is encountered, `goforth` links it to the offset in the input string where
@@ -29,7 +29,7 @@ Forth itself using lower-level primitives.
 
 To run `goforth` on a piece of Forth code, simply execute:
 
-```shell
+```
 $ go run . < forth-file
 ```
 
@@ -50,7 +50,7 @@ of `IF...THEN...ELSE` conditions and `BEGIN...REPEAT` loops in Forth itself.
 To run `ctil` on a piece of Forth code, first build `ctil`. A Makefile is
 included - `ctil` has no external dependencies other than a standard C compiler.
 
-```shell
+```
 $ cd ctil
 $ make
 ```
