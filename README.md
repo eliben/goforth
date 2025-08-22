@@ -68,6 +68,10 @@ in the `ctil` directory, run:
 $ ./ctil -i prelude.4th < ../testdata/fizzbuzz.4th
 ```
 
+The design of `ctil` is inspired by the [jonesforth](http://git.annexia.org/?p=jonesforth.git)
+implementation, though some things work differently (I tried to stick closer to standard
+Forth).
+
 ## Testing
 
 goforth has an extensive automated test harness. Each test consists of a file
