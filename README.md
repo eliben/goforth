@@ -1,21 +1,24 @@
 # goforth
 
-Thoughts on Go implementation: Forth was designed with a very specific
-implementation (in assembly) in mind, and its "compile-mode" and
-"interpreter-mode" are manifestations of that. Implementing Forth using a
-different approach is difficult as a result.
+<p align="center">
+  <img alt="Logo" src="doc/goforth-logo-sm.png" />
+</p>
 
-For example, in my Go implementation I opted for a source-based interpreter,
-where the source code is the representation the interpreter reads and acts
-upon, without translating it into another representation first (like a syntax
-tree, some sort of IR, etc). This is because Forth assumes the source code
-is available (e.g. for words like CHAR), so using an intermediate representation
-would create its own challenges.
+----
 
-But interepreting the source is challenging: see the implementation of
-DO...LOOP, for example, and the subtle interactions with nested IFs, etc.
-It would be possible to implement unbounded loops (BEGIN...) similarly, but
-it would have equivalent complications.
+This repository contains two implementations of the Forth programming language.
+
+The first is just called `goforth` and lives in the root directory of this
+repository. The second is called `ctil` and lives in the `ctil` directory.
+
+## goforth - Go implementation of Forth
+
+`goforth` is implemented in Go takes an unusual approach to Forth. It acts
+as a source-level interpreter. There is no intermediate representation of
+the program - the source string is interpreted directly. When a word definition
+is encountered, `goforth` links it to the offset in the input string where
+the word is defined, and when this word is called the interpreter just
+processes its string definition word by word.
 
 ## Testing
 
