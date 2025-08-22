@@ -6,7 +6,8 @@
 
 ----
 
-This repository contains two implementations of the Forth programming language.
+This repository contains two implementations of the
+[Forth programming language](https://en.wikipedia.org/wiki/Forth_(programming_language)).
 
 The first is just called `goforth` and lives in the root directory of this
 repository. The second is called `ctil` and lives in the `ctil` directory.
@@ -21,9 +22,9 @@ the word is defined, and when this word is called the interpreter just
 processes its string definition word by word.
 
 This is an interesting experiment but clearly not the best way to implement
-Forth; in addition to the performance implication, it makes implementing things
+Forth; in addition to the performance implications, it makes implementing things
 like loops quite difficult (having to carefully keep track of nested constructs
-like `IF` to enable proper `LEAVE`), and it doesn't allow of Forth's famous
+like `IF` to enable proper `LEAVE`), and it's hard to support Forth's famous
 self-extension mechanisms - for example, implementing `IF...THEN...ELSE` in
 Forth itself using lower-level primitives.
 
@@ -42,7 +43,8 @@ as examples to run and play with.
 
 ## ctil: lower-level C implementation
 
-`ctil` (stands for "C [Thread Interpretive Language](https://en.wikipedia.org/wiki/Threaded_code)) is a C implementation of Forth. It takes a much more traditional
+`ctil` (stands for "C [Thread Interpretive Language](https://en.wikipedia.org/wiki/Threaded_code))
+is a C implementation of Forth. It takes a much more traditional
 Forth implementation approach, where the Forth code is actually compiled into
 linked dictionary entries, and word invocations are replaced with the addresses
 of the dictionary entries for these words.
@@ -50,7 +52,8 @@ of the dictionary entries for these words.
 `ctil` still deviates from the Forth convention of Assembly language
 implementations, but it should be able to support pretty much everything.
 As an example, take a look at `ctil/prelude.4th` - it contains implementations
-of `IF...THEN...ELSE` conditions and `BEGIN...REPEAT` loops in Forth itself.
+of the `variable` word, `IF...THEN...ELSE` conditions and `BEGIN...REPEAT`
+loops in Forth itself.
 
 To run `ctil` on a piece of Forth code, first build `ctil`. A Makefile is
 included - `ctil` has no external dependencies other than a standard C compiler.
@@ -82,4 +85,4 @@ interpreter and compares the output with what's expected.
 Both interpreters are tested using a Go test harness; `goforth_test.go` tests
 the Go implementation, and `ctil_test.go` tests the C implementation. Since the
 C implementation supports more features, some test files in `testdata` are
-prefixed by `ctil-` and are run only for the C implementation.
+prefixed by `ctil-` and are run only for `ctil`.
