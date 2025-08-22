@@ -43,7 +43,7 @@ as examples to run and play with.
 
 ## ctil: lower-level C implementation
 
-`ctil` (stands for "C [Thread Interpretive Language](https://en.wikipedia.org/wiki/Threaded_code))
+`ctil` (stands for "C [Thread Interpretive Language](https://wiki.c2.com/?ThreadedInterpretiveLanguage)")
 is a C implementation of Forth. It takes a much more traditional
 Forth implementation approach, where the Forth code is actually compiled into
 linked dictionary entries, and word invocations are replaced with the addresses
