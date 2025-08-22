@@ -4,6 +4,7 @@
 : meow5 meow meow meow meow meow ;
 
 meow5
+bye
 
 \ ---- OUT ----
 Meow!

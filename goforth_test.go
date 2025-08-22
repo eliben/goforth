@@ -26,6 +26,11 @@ func TestForthFiles(t *testing.T) {
 			}
 
 			it := NewInterpreter()
+
+			// Override the onExit handler to do nothing, so tests can continue
+			// after a Forth program invokes BYE.
+			it.onExit = func() {}
+
 			it.Run(code)
 			actual := strings.TrimSpace(it.stdout.String())
 

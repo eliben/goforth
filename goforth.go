@@ -44,6 +44,11 @@ type Interpreter struct {
 
 	// dict is the Forth dictionary
 	dict map[string]DictEntry
+
+	// onExit is called when the exit() method is invoked. The default
+	// behavior is to print out the stdout buffer and exit the program
+	// with code 0, but tests can override this to do something else.
+	onExit func()
 }
 
 // NewInterpreter creates a new Interpreter instance.
@@ -54,6 +59,12 @@ func NewInterpreter() *Interpreter {
 		dict:             make(map[string]DictEntry),
 		builtinImmediate: make(map[string]bool),
 	}
+
+	it.onExit = func() {
+		fmt.Println(it.stdout.String())
+		os.Exit(0)
+	}
+
 	it.setupBuiltins()
 	return it
 }
@@ -79,6 +90,11 @@ func (it *Interpreter) doRun() {
 
 		it.executeWord(word)
 	}
+}
+
+// exit invokes the onExit handler.
+func (it *Interpreter) exit() {
+	it.onExit()
 }
 
 // executeWord executes a single word in the Forth program.
@@ -215,5 +231,8 @@ func main() {
 	it := NewInterpreter()
 	it.Run(string(data))
 
-	fmt.Println(it.stdout.String())
+	// Call exit to invoke the default exit behavior. Note that Forth programs
+	// can call exit() themselves by running the BYE word, so this line won't
+	// necessarily be executed.
+	it.exit()
 }

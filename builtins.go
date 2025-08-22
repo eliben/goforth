@@ -72,6 +72,7 @@ func (it *Interpreter) setupBuiltins() {
 	addBuiltin(`I`, it.loopIndex)
 	addBuiltin(`J`, it.loopIndex)
 	addBuiltin(`K`, it.loopIndex)
+	addBuiltin(`BYE`, it.bye)
 
 	it.builtinImmediate = map[string]bool{
 		`."`: true,
@@ -767,4 +768,8 @@ func (it *Interpreter) skipLoop() {
 			it.skippedThenCount++
 		}
 	}
+}
+
+func (it *Interpreter) bye(string) {
+	it.exit()
 }

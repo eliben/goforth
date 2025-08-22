@@ -740,6 +740,11 @@ void _k(state_t* s) {
   push_data_stack(s, s->retstack[s->retstacktop - 4]);
 }
 
+void bye(state_t* s) {
+  fflush(s->output);
+  exit(0);
+}
+
 // Create a new dictionary entry for a built-in function. The F_BUILTIN flag
 // is automatically set for all built-ins; the flags parameter can be used
 // to specify additional flags.
@@ -830,4 +835,5 @@ void register_builtins(state_t* state) {
 
   register_builtin(state, ":", 0, colon);
   register_builtin(state, ";", F_IMMEDIATE, semicolon);
+  register_builtin(state, "BYE", 0, bye);
 }
