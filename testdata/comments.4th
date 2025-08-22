@@ -8,6 +8,7 @@
 9 ( comment) . ( cc "" tt ." nop 9 ) 10 .
 
 11 ( nested ( ( ( ends with first ) .
+bye
 
 \ ---- OUT ----
 

@@ -4,6 +4,7 @@
 10 . cr
 '\n' dup emit emit
 20 . cr
+bye
 
 \ ---- OUT ----
 10 

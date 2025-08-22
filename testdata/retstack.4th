@@ -17,6 +17,7 @@ clearstack
 \ Test that rdrop works
 5 6 7 >r >r rdrop ( only 7 remains on RS ... )
 . r> . 10 emit
+bye
 
 \ ---- OUT ----
 <2> 10 20 

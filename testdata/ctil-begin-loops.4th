@@ -54,6 +54,7 @@
   ;
 
 beginloops
+bye
 
 \ ---- OUT ----
 c=5 c=4 c=3 c=2 c=1 

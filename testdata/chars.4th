@@ -10,6 +10,7 @@ char ? emit cr
   loop ;
 
 alphabet cr
+bye
 
 \ ---- OUT ----
 *

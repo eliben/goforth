@@ -11,6 +11,7 @@
 \ so this will add 99 to the stack
 : word2 kwa-imm ;
 .s cr
+bye
 
 \ ---- OUT ----
 <0> 

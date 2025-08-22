@@ -35,6 +35,7 @@ pushpie . . . 10 emit
 5 6 + . 10 emit
 
 ." fin"
+bye
 
 \ ---- OUT ----
 2 

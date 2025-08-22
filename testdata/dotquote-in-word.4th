@@ -9,6 +9,7 @@
 : moresee ." I see " . ."  cucumbers" ;
 
 3 moresee 10 emit
+bye
 
 \ ---- OUT ----
 I see 9 

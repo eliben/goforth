@@ -33,6 +33,7 @@
   0 swap do i verse -1 +loop ;
 
 3 verses
+bye
 
 \ ---- OUT ----
 

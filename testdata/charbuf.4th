@@ -6,6 +6,7 @@ buf c@ .          \ prints 72 (ASCII 'H')
 buf char+ c@ emit \ prints i
 
 10 emit
+bye
 
 \ ---- OUT ----
 72 i

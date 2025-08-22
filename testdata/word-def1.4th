@@ -16,6 +16,7 @@
 : trpl dup dbl + ;
 
 14 trpl . 10 emit
+bye
 
 \ ---- OUT ----
 1024 

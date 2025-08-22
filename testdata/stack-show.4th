@@ -3,6 +3,7 @@
 clearstack
 
 10 dup dup dup .s 10 emit
+bye
 
 \ ---- OUT ----
 <3> 10 20 30 

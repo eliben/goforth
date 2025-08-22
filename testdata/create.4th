@@ -15,6 +15,7 @@ create var2
 
 ." value of myvar: " myvar @ . 10 emit
 ." value of var2: " var2 @ . 10 emit
+bye
 
 \ ---- OUT ----
 value of myvar: 137 

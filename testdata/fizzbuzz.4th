@@ -5,6 +5,7 @@
 : fizz-buzz?  dup fizz? swap buzz? or invert ;
 : do-fizz-buzz  16 1 do cr i fizz-buzz? if i . then loop ;
 do-fizz-buzz
+bye
 
 \ ---- OUT ----
 1 

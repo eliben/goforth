@@ -51,6 +51,7 @@
   ;
 
 doloops
+bye
 
 \ ---- OUT ----
 hop hop hop 

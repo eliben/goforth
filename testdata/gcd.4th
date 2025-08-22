@@ -18,6 +18,7 @@ clearstack
 39 18 gcd . cr
 109 28 gcd . cr
 105 28 gcd . cr
+bye
 
 \ ---- OUT ----
 testing ?dup

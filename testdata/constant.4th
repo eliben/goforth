@@ -7,6 +7,7 @@ limit . 10 emit
 addr limit + . 10 emit
 
 .s 10 emit
+bye
 
 \ ---- OUT ----
 220 

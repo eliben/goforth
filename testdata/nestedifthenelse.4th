@@ -46,6 +46,7 @@
   ;
 
 nestedifthenelse
+bye
 
 \ ---- OUT ----
 outer if ok inner if ok

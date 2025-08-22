@@ -37,6 +37,7 @@ ifthenelse
   ;
 
 ifstr
+bye
 
 \ ---- OUT ----
 1 is true and after 1

@@ -6,6 +6,7 @@
   loop ;
     
 rectangle
+bye
 
 \ ---- OUT ----
 ********

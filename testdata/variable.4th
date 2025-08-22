@@ -19,6 +19,7 @@ variable mark
 
 ." value of bob: " bob ? 10 emit
 ." value of mark " mark ? 10 emit
+bye
 
 \ ---- OUT ----
 value of bob: 99 

@@ -21,6 +21,7 @@ create arr2 100 , 200 , 300 , 400 , 500 ,
 1 cells arr2 + ?
 2 cells arr2 + ?
 4 cells arr2 + ?
+bye
 
 \ ---- OUT ----
 10 30 40 
